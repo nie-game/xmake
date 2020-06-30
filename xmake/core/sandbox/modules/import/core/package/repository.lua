@@ -78,7 +78,7 @@ function sandbox_core_package_repository.repositories(is_global)
         import("net.fasturl")
 
         -- sort main urls
-        local mainurls = {"https://github.com/xmake-io/xmake-repo.git", "https://gitlab.com/tboox/xmake-repo.git", "https://gitee.com/tboox/xmake-repo.git"}
+        local mainurls = {}
         fasturl.add(mainurls)
         mainurls = fasturl.sort(mainurls)
 
