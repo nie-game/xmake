@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -21,17 +21,18 @@
 -- imports
 import("lib.detect.find_program")
 import("lib.detect.find_programver")
+import("lib.detect.find_tool")
 
--- find link 
+-- find link
 --
 -- @param opt   the argument options, e.g. {version = true}
 --
 -- @return      program, version
 --
--- @code 
+-- @code
 --
 -- local link = find_link()
--- 
+--
 -- @endcode
 --
 function main(opt)
@@ -42,18 +43,21 @@ function main(opt)
     -- init options
     opt       = opt or {}
     opt.check = opt.check or function (program)
-       
+
+        -- find cl
+        local cl = assert(find_tool("cl", {envs = opt.envs}))
+
         -- make an stub source file
         local binaryfile = os.tmpfile() .. ".exe"
         local objectfile = os.tmpfile() .. ".obj"
         local sourcefile = os.tmpfile() .. ".c"
 
-        -- main entry
+        -- compile sourcefile first
         io.writefile(sourcefile, "int main(int argc, char** argv)\n{return 0;}")
+        os.runv(cl.program, {"-c", "-Fo" .. objectfile, sourcefile}, {envs = opt.envs})
 
-        -- check it
-        os.run("cl -c -Fo%s %s", objectfile, sourcefile)
-        verinfo = os.iorun("%s -out:%s %s", program, binaryfile, objectfile)
+        -- do link
+        verinfo = os.iorunv(program, {"-lib", "-out:" .. binaryfile, objectfile}, {envs = opt.envs})
 
         -- remove files
         os.rm(objectfile)
@@ -62,7 +66,7 @@ function main(opt)
     end
     opt.command = opt.command or function () return verinfo end
     opt.parse   = opt.parse or function (output) return output:match("Version (%d+%.?%d*%.?%d*.-)%s") end
-    
+
     -- find program
     local verinfo = nil
     local program = find_program(opt.program or "link.exe", opt)

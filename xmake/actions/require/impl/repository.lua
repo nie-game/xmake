@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -53,6 +53,11 @@ end
 
 -- get package directory from repositories
 function packagedir(packagename, reponame)
+
+    -- strip trailng ~tag, e.g. zlib~debug
+    if packagename:find('~', 1, true) then
+        packagename = packagename:gsub("~.+$", "")
+    end
 
     -- get it from cache it
     local packagedirs = _g._PACKAGEDIRS or {}
@@ -99,8 +104,6 @@ function searchdirs(name)
             end
         end
     end
-
-    -- ok?
     return packageinfos
 end
 

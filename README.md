@@ -1,19 +1,19 @@
 <div align="center">
   <a href="https://xmake.io">
-    <img width="200" heigth="200" src="https://tboox.org/static/img/xmake/logo256c.png">
+    <img width="160" heigth="160" src="https://tboox.org/static/img/xmake/logo256c.png">
   </a>  
 
   <h1>xmake</h1>
 
   <div>
-    <a href="https://travis-ci.org/xmake-io/xmake">
-      <img src="https://img.shields.io/travis/xmake-io/xmake/master.svg?style=flat-square" alt="travis-ci" />
+    <a href="https://github.com/xmake-io/xmake/actions?query=workflow%3AWindows">
+      <img src="https://img.shields.io/github/workflow/status/xmake-io/xmake/Windows/dev.svg?style=flat-square&logo=windows" alt="github-ci" />
     </a>
-    <a href="https://ci.appveyor.com/project/waruqi/xmake/branch/master">
-      <img src="https://img.shields.io/appveyor/ci/waruqi/xmake/master.svg?style=flat-square" alt="appveyor-ci" />
+    <a href="https://github.com/xmake-io/xmake/actions?query=workflow%3ALinux">
+      <img src="https://img.shields.io/github/workflow/status/xmake-io/xmake/Linux/dev.svg?style=flat-square&logo=linux" alt="github-ci" />
     </a>
-    <a href="https://aur.archlinux.org/packages/xmake">
-      <img src="https://img.shields.io/aur/votes/xmake.svg?style=flat-square" alt="AUR votes" />
+    <a href="https://github.com/xmake-io/xmake/actions?query=workflow%3AmacOS">
+      <img src="https://img.shields.io/github/workflow/status/xmake-io/xmake/macOS/dev.svg?style=flat-square&logo=apple" alt="github-ci" />
     </a>
     <a href="https://github.com/xmake-io/xmake/releases">
       <img src="https://img.shields.io/github/release/xmake-io/xmake.svg?style=flat-square" alt="Github All Releases" />
@@ -23,17 +23,20 @@
     <a href="https://github.com/xmake-io/xmake/blob/master/LICENSE.md">
       <img src="https://img.shields.io/github/license/xmake-io/xmake.svg?colorB=f48041&style=flat-square" alt="license" />
     </a>
-    <a href="https://www.reddit.com/r/tboox/">
+    <a href="https://www.reddit.com/r/xmake/">
       <img src="https://img.shields.io/badge/chat-on%20reddit-ff3f34.svg?style=flat-square" alt="Reddit" />
     </a>
-    <a href="https://gitter.im/tboox/tboox?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">
-      <img src="https://img.shields.io/gitter/room/tboox/tboox.svg?style=flat-square&colorB=96c312" alt="Gitter" />
+    <a href="https://gitter.im/xmake-io/xmake?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">
+      <img src="https://img.shields.io/gitter/room/xmake-io/xmake.svg?style=flat-square&colorB=96c312" alt="Gitter" />
     </a>
     <a href="https://t.me/tbooxorg">
       <img src="https://img.shields.io/badge/chat-on%20telegram-blue.svg?style=flat-square" alt="Telegram" />
     </a>
     <a href="https://jq.qq.com/?_wv=1027&k=5hpwWFv">
       <img src="https://img.shields.io/badge/chat-on%20QQ-ff69b4.svg?style=flat-square" alt="QQ" />
+    </a>
+    <a href="https://aur.archlinux.org/packages/xmake">
+      <img src="https://img.shields.io/aur/votes/xmake.svg?style=flat-square" alt="AUR votes" />
     </a>
     <a href="https://xmake.io/#/sponsor">
       <img src="https://img.shields.io/badge/donate-us-orange.svg?style=flat-square" alt="Donate" />
@@ -43,21 +46,21 @@
   <p>A cross-platform build utility based on Lua</p>
 </div>
 
+## Supporting the project
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. 🙏 [[Become a sponsor](https://xmake.io/#/about/sponsor)]
+
+<a href="https://opencollective.com/xmake#backers" target="_blank"><img src="https://opencollective.com/xmake/backers.svg?width=890"></a>
+
 ## Introduction ([中文](/README_zh.md))
 
-xmake is a cross-platform build utility based on lua. 
+xmake is a lightweight cross-platform build utility based on Lua. It uses xmake.lua to maintain project builds. Compared with makefile/CMakeLists.txt, the configuration syntax is more concise and intuitive. It is very friendly to novices and can quickly get started in a short time. Let users focus more on actual project development.
 
-The project focuses on making development and building easier and provides many features (e.g package, install, plugin, macro, action, option, task ...), 
-so that any developer can quickly pick it up and enjoy a productivity boost when developing and building projects.
+It can compile the project directly like Make/Ninja, or generate project files like CMake/Meson, and it also has a built-in package management system to help users solve the integrated use of C/C++ dependent libraries.
 
-<img src="https://xmake.io/assets/img/index/package_manage.png" width="650px" />
+If you want to know more, please refer to: [Documents](https://xmake.io/#/home), [Github](https://github.com/xmake-io/xmake) and [Gitee](https://gitee.com/tboox/xmake)
 
-If you want to know more, please refer to:
-
-* [Documents](https://xmake.io/#/home)
-* [HomePage](https://xmake.io)
-* [Github](https://github.com/xmake-io/xmake)
-* [Gitee](https://gitee.com/tboox/xmake)
+![](https://xmake.io/assets/img/index/xmake-basic-render.gif)
 
 ## Installation
 
@@ -166,8 +169,38 @@ The test project: [xmake-core](https://github.com/xmake-io/xmake/tree/master/cor
 * MSYS (i386, x86_64)
 * MinGW (i386, x86_64)
 * Cygwin (i386, x86_64)
-* SDCC (stm8, mcs51, ..)
+* Wasm (wasm32)
 * Cross (cross-toolchains ..)
+
+## Supported toolchains
+
+```bash
+$ xmake show -l toolchains
+xcode         Xcode IDE
+vs            VisualStudio IDE
+yasm          The Yasm Modular Assembler
+clang         A C language family frontend for LLVM
+go            Go Programming Language Compiler
+dlang         D Programming Language Compiler
+gfortran      GNU Fortran Programming Language Compiler
+zig           Zig Programming Language Compiler
+sdcc          Small Device C Compiler
+cuda          CUDA Toolkit
+ndk           Android NDK
+rust          Rust Programming Language Compiler
+llvm          A collection of modular and reusable compiler and toolchain technologies
+cross         Common cross compilation toolchain
+nasm          NASM Assembler
+gcc           GNU Compiler Collection
+mingw         Minimalist GNU for Windows
+gnu-rm        GNU Arm Embedded Toolchain
+envs          Environment variables toolchain
+fasm          Flat Assembler
+tinyc         Tiny C Compiler
+emcc          A toolchain for compiling to asm.js and WebAssembly
+icc           Intel C/C++ Compiler
+ifort         Intel Fortran Compiler
+```
 
 ## Supported Languages
 
@@ -179,7 +212,9 @@ The test project: [xmake-core](https://github.com/xmake-io/xmake/tree/master/cor
 * Golang
 * Rust
 * Dlang
+* Fortran
 * Cuda
+* Zig (Experimental)
 
 ## Supported Projects
 
@@ -196,7 +231,7 @@ The test project: [xmake-core](https://github.com/xmake-io/xmake/tree/master/cor
 
 ## More Examples
 
-Debug and release modes:
+#### Debug and release modes
 
 ```lua
 add_rules("mode.debug", "mode.release")
@@ -209,7 +244,7 @@ target("console")
     end
 ```
 
-Custom scripts:
+#### Custom scripts
 
 ```lua
 target("test")
@@ -221,18 +256,20 @@ target("test")
     end)
 ```
 
+#### Automatic integration of dependent packages
+
 Download and use packages in [xmake-repo](https://github.com/xmake-io/xmake-repo) or third-party repositories:
 
 ```lua
 add_requires("tbox >1.6.1", "libuv master", "vcpkg::ffmpeg", "brew::pcre2/libpcre2-8")
-add_requires("conan::OpenSSL/1.0.2n@conan/stable", {alias = "openssl", optional = true, debug = true}) 
+add_requires("conan::openssl/1.1.1g", {alias = "openssl", optional = true, debug = true}) 
 target("test")
     set_kind("binary")
     add_files("src/*.c")
     add_packages("tbox", "libuv", "vcpkg::ffmpeg", "brew::pcre2/libpcre2-8", "openssl")
 ```
 
-Qt QuickApp Program:
+#### Qt QuickApp Program
 
 ```lua
 target("test")
@@ -241,17 +278,17 @@ target("test")
     add_files("src/qml.qrc")
 ```
 
-Cuda Program:
+#### Cuda Program
 
 ```lua
 target("test")
     set_kind("binary")
     add_files("src/*.cu")
     add_cugencodes("native")
-    add_cugencodes("compute_30")
+    add_cugencodes("compute_35")
 ```
 
-WDK/UMDF Driver Program:
+#### WDK/UMDF Driver Program
 
 ```lua
 target("echo")
@@ -267,7 +304,7 @@ target("app")
 
 More wdk driver program examples (umdf/kmdf/wdm), please see [WDK Program Examples](https://xmake.io/#/guide/project_examples?id=wdk-driver-program)
 
-iOS/MacOS Application:
+#### iOS/MacOS Application
 
 ```lua
 target("test")
@@ -276,13 +313,24 @@ target("test")
     add_files("src/Info.plist")
 ```
 
-Framework and Bundle Program (iOS/MacOS):
+#### Framework and Bundle Program (iOS/MacOS)
 
 ```lua
 target("test")
     add_rules("xcode.framework") -- or xcode.bundle
     add_files("src/*.m")
     add_files("src/Info.plist")
+```
+
+#### OpenMP Program
+
+```lua
+add_requires("libomp", {optional = true})
+target("loop")
+    set_kind("binary")
+    add_files("src/*.cpp")
+    add_rules("c++.openmp")
+    add_packages("libomp")
 ```
 
 ## Plugins
@@ -374,6 +422,16 @@ $ ./gradlew app:assembleDebug
 > Task :app:assembleDebug
 ```
 
+## Technical Support
+
+We also provide paid technical support to help users quickly solve related problems. For details, please click the image link below:
+
+<a href="https://xscode.com/waruqi/xmake">
+<img src="https://tboox.org/assets/img/xmake-xscode.png" width="650px" />
+</a>
+
+Or you can also consider sponsoring us to get technical support services, [[Become a sponsor](https://xmake.io/#/about/sponsor)]
+
 ## Project Examples
 
 Some projects using xmake:
@@ -383,18 +441,12 @@ Some projects using xmake:
 * [vm86](https://github.com/tboox/vm86)
 * [more](https://github.com/xmake-io/awesome-xmake)
 
-## Example Video
-
-<a href="https://asciinema.org/a/133693">
-<img src="https://asciinema.org/a/133693.png" width="650px" />
-</a>
-
 ## Contacts
 
 * Email：[waruqi@gmail.com](mailto:waruqi@gmail.com)
 * Homepage：[tboox.org](https://tboox.org)
-* Community：[/r/tboox on reddit](https://www.reddit.com/r/tboox/)
-* ChatRoom：[Char on telegram](https://t.me/tbooxorg), [Chat on gitter](https://gitter.im/tboox/tboox?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+* Community：[/r/xmake on reddit](https://www.reddit.com/r/xmake/)
+* ChatRoom：[Char on telegram](https://t.me/tbooxorg), [Chat on gitter](https://gitter.im/xmake-io/xmake?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 * Source Code：[Github](https://github.com/xmake-io/xmake), [Gitee](https://gitee.com/tboox/xmake)
 * QQ Group: 343118190(Technical Support), 662147501
 * Wechat Public: tboox-os
@@ -407,26 +459,3 @@ This project exists thanks to all the people who have [contributed](CONTRIBUTING
 * [TitanSnow](https://github.com/TitanSnow): provide the xmake [logo](https://github.com/TitanSnow/ts-xmake-logo) and install scripts
 * [uael](https://github.com/uael): provide the semantic versioning library [sv](https://github.com/uael/sv)
 * [OpportunityLiu](https://github.com/OpportunityLiu): improve cuda, tests and ci
-
-## Backers
-
-Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/xmake#backer)]
-
-<a href="https://opencollective.com/xmake#backers" target="_blank"><img src="https://opencollective.com/xmake/backers.svg?width=890"></a>
-
-## Sponsors
-
-Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/xmake#sponsor)]
-
-<a href="https://opencollective.com/xmake/sponsor/0/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/0/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/1/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/1/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/2/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/2/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/3/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/3/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/4/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/4/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/5/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/5/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/6/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/6/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/7/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/7/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/8/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/8/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/9/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/9/avatar.svg"></a>
-
-

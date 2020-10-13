@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -104,7 +104,7 @@ function dump()
     print(mobile_provisions())
 end
 
--- remove signature 
+-- remove signature
 function unsign(programdir)
 
     -- only for macosx
@@ -121,9 +121,10 @@ function unsign(programdir)
 end
 
 -- main entry
-function main (programdir, codesign_identity, mobile_provision)
+function main (programdir, codesign_identity, mobile_provision, opt)
 
     -- only for macosx
+    opt = opt or {}
     assert(is_host("macosx"), "codesign: only support for macOS!")
 
     -- get codesign
@@ -139,7 +140,7 @@ function main (programdir, codesign_identity, mobile_provision)
         codesign_allocate = path.join(xcode_sdkdir, "Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate")
     end
 
-    -- get codesign 
+    -- get codesign
     local sign = "-"
     if codesign_identity then -- we will uses sign/'-' if be false for `xmake f --xcode_codesign_identity=n`
         local identities = codesign_identities()
@@ -172,6 +173,9 @@ function main (programdir, codesign_identity, mobile_provision)
 
     -- do sign
     local argv = {"--force", "--timestamp=none"}
+    if opt.deep then
+        table.insert(argv, "--deep")
+    end
     table.insert(argv, "--sign")
     table.insert(argv, sign)
     if entitlements then

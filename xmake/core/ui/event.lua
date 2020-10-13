@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -75,6 +75,14 @@ event:register("cm_max", "cm_quit", "cm_exit", "cm_enter")
 -- keymeta = ALT key was pressed
 --
 event.keyboard = object {_init = { "key_code", "key_name", "key_meta" }, type = event.ev_keyboard}
+
+-- define mouse event
+--
+-- btn_name = button number and event type
+-- btn_code = mouse event code
+-- x, y = coordinates
+--
+event.mouse = object {_init = { "btn_code", "x", "y", "btn_name" }, type = event.ev_mouse}
 
 -- define command event
 event.command = object {_init = { "command", "extra" }, type = event.ev_command}

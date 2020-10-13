@@ -43,7 +43,7 @@ function _file.new(filepath, cdata, isstdfile)
     return file
 end
 
--- get the file name 
+-- get the file name
 function _file:name()
     if not self._NAME then
         self._NAME = path.filename(self:path())
@@ -51,7 +51,7 @@ function _file:name()
     return self._NAME
 end
 
--- get the file path 
+-- get the file path
 function _file:path()
     return self._PATH
 end
@@ -109,6 +109,7 @@ end
 -- gc(file)
 function _file:__gc()
     if self:cdata() and io.file_close(self:cdata()) then
+        -- remove ref to notify gc that it should be freed
         self._FILE = nil
     end
 end
@@ -158,6 +159,11 @@ function _file:size()
 end
 
 -- read data from file
+--
+-- @param fmt       the reading format
+-- @param opt       the options
+--                  - continuation (concat string with the given continuation characters)
+--
 function _file:read(fmt, opt)
 
     -- ensure opened
@@ -386,7 +392,7 @@ function _filelock:unlock(opt)
     if self._LOCKED_NUM > 1 or (self._LOCKED_NUM > 0 and io.filelock_unlock(self:cdata())) then
         if self._LOCKED_NUM > 0 then
             self._LOCKED_NUM = self._LOCKED_NUM - 1
-        else 
+        else
             self._LOCKED_NUM = 0
         end
         return true
@@ -549,6 +555,12 @@ function io.stdfile(filepath)
 end
 
 -- open file
+--
+-- @param filepath      the file path
+-- @param mode          the open mode, e.g. 'r', 'rb', 'w+', 'a+', ..
+-- @param opt           the options
+--                      - encoding, e.g. utf8, utf16, utf16le, utf16be ..
+--
 function io.open(filepath, mode, opt)
 
     -- check
@@ -666,8 +678,33 @@ function io.gsub(filepath, pattern, replace, opt)
         local ok, errors = io.writefile(filepath, data, opt)
         if not ok then return nil, 0, errors end
     end
+    return data, count
+end
 
-    -- ok
+-- replace text of the given file and return replaced data
+function io.replace(filepath, pattern, replace, opt)
+
+    -- init option
+    opt = opt or {}
+
+    -- read all data from file
+    local data, errors = io.readfile(filepath, opt)
+    if not data then return nil, 0, errors end
+
+    -- replace it
+    local count = 0
+    if type(data) == "string" then
+        data, count = data:replace(pattern, replace, opt)
+    else
+        return nil, 0, string.format("data is not string!")
+    end
+
+    -- replace ok?
+    if count ~= 0 then
+        -- write all data to file
+        local ok, errors = io.writefile(filepath, data, opt)
+        if not ok then return nil, 0, errors end
+    end
     return data, count
 end
 
@@ -761,7 +798,7 @@ end
 io.stdin  = nil
 io.stdout = nil
 io.stderr = nil
-setmetatable(io, { __index = function (tbl, key)    
+setmetatable(io, { __index = function (tbl, key)
         local val = rawget(tbl, key)
         if val == nil and (key == "stdin" or key == "stdout" or key == "stderr") then
             val = io.stdfile("/dev/" .. key)

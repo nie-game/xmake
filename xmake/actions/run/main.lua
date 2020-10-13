@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -66,7 +66,7 @@ function _do_run_target(target)
     os.cd(oldir)
 end
 
--- run target 
+-- run target
 function _on_run_target(target)
 
     -- has been disabled?
@@ -89,7 +89,7 @@ function _on_run_target(target)
     _do_run_target(target)
 end
 
--- run the given target 
+-- run the given target
 function _run(target)
 
     -- enter the environments of the target packages
@@ -107,7 +107,7 @@ function _run(target)
 
             -- has been disabled?
             if target:get("enabled") == false then
-                return 
+                return
             end
 
             -- run rules
@@ -123,7 +123,7 @@ function _run(target)
 
             -- has been disabled?
             if target:get("enabled") == false then
-                return 
+                return
             end
 
             -- run rules
@@ -160,7 +160,7 @@ function _check_targets(targetname)
         table.insert(targets, project.target(targetname))
     else
         -- install default or all targets
-        for _, target in pairs(project.targets()) do
+        for _, target in ipairs(project.ordertargets()) do
             local default = target:get("default")
             if (default == nil or default == true or option.get("all")) and target:targetkind() == "binary" then
                 table.insert(targets, target)
@@ -192,7 +192,7 @@ function main()
     local targetname = option.get("target")
 
     -- config it first
-    task.run("config", {target = targetname, require = "n"})
+    task.run("config", {target = targetname, require = "n", verbose = false})
 
     -- check targets first
     _check_targets(targetname)
@@ -208,7 +208,7 @@ function main()
         _run(project.target(targetname))
     else
         -- run default or all binary targets
-        for _, target in pairs(project.targets()) do
+        for _, target in ipairs(project.ordertargets()) do
             local default = target:get("default")
             if (default == nil or default == true or option.get("all")) and target:targetkind() == "binary" then
                 _run(target)

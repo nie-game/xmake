@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -24,13 +24,14 @@ rule("xcode.xcassets")
     -- support add_files("*.xcassets")
     set_extensions(".xcassets")
 
-    -- build *.xcassets 
+    -- build *.xcassets
     on_build_file(function (target, sourcefile, opt)
 
         -- imports
         import("core.base.option")
         import("core.theme.theme")
         import("core.project.depend")
+        import("private.utils.progress")
 
         -- get xcode sdk directory
         local xcode_sdkdir = assert(get_config("xcode"), "xcode not found!")
@@ -43,34 +44,32 @@ rule("xcode.xcassets")
         local dependfile = target:dependfile(sourcefile)
         local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
         if not depend.is_changed(dependinfo, {lastmtime = os.mtime(dependfile)}) then
-            return 
+            return
         end
 
         -- ensure resources directory exists
         if not os.isdir(resourcesdir) then
             os.mkdir(resourcesdir)
         end
-     
+
         -- trace progress info
-        cprintf("${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} ", opt.progress)
-        if option.get("verbose") then
-            cprint("${dim color.build.object}compiling.xcode.$(mode) %s", sourcefile)
-        else
-            cprint("${color.build.object}compiling.xcode.$(mode) %s", sourcefile)
-        end
+        progress.show(opt.progress, "${color.build.object}compiling.xcode.$(mode) %s", sourcefile)
 
         -- get assetcatalog_generated_info.plist
         local assetcatalog_generated_info_plist = path.join(target:autogendir(), "rules", "xcode", "xcassets", "assetcatalog_generated_info.plist")
         io.writefile(assetcatalog_generated_info_plist, "")
 
         -- do compile
+        local target_minver
         local argv = {"--warnings", "--notices", "--output-format", "human-readable-text"}
         if is_plat("macosx") then
+            target_minver = get_config("target_minver_macosx")
             table.insert(argv, "--target-device")
             table.insert(argv, "mac")
             table.insert(argv, "--platform")
             table.insert(argv, "macosx")
         elseif is_plat("iphoneos") then
+            target_minver = get_config("target_minver_iphoneos")
             table.insert(argv, "--target-device")
             table.insert(argv, "iphone")
             table.insert(argv, "--target-device")
@@ -80,8 +79,10 @@ rule("xcode.xcassets")
         else
             assert("unknown device!")
         end
-        table.insert(argv, "--minimum-deployment-target")
-        table.insert(argv, get_config("target_minver"))
+        if target_minver then
+            table.insert(argv, "--minimum-deployment-target")
+            table.insert(argv, target_minver)
+        end
         table.insert(argv, "--app-icon")
         table.insert(argv, "AppIcon")
         if is_plat("iphoneos") then
@@ -102,7 +103,7 @@ rule("xcode.xcassets")
         table.insert(argv, resourcesdir)
         table.insert(argv, sourcefile)
         os.vrunv(path.join(xcode_usrdir, "bin", "actool"), argv)
-       
+
         -- update files and values to the dependent file
         dependinfo.files = {sourcefile}
         depend.save(dependinfo, dependfile)

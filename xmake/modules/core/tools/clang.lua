@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -32,13 +32,13 @@ function init(self)
         self:add("shared.cuflags", "-fPIC")
     end
 
-    -- suppress warning 
+    -- suppress warning
     self:add("cxflags", "-Qunused-arguments")
     self:add("cuflags", "-Qunused-arguments")
     self:add("mxflags", "-Qunused-arguments")
     self:add("asflags", "-Qunused-arguments")
 
-    -- add cuda path 
+    -- add cuda path
     local cuda = get_config("cuda")
     if cuda then
         local cuda_path = "--cuda-path=" .. os.args(path.translate(cuda))
@@ -71,12 +71,35 @@ function init(self)
 
 end
 
+-- make the fp-model flag
+function nf_fpmodel(self, level)
+    local maps
+    if self:has_flags("-ffp-model=fast") then
+        maps =
+        {
+            precise    = "-ffp-model=precise"
+        ,   fast       = "-ffp-model=fast"
+        ,   strict     = "-ffp-model=strict"
+        ,   except     = "-ftrapping-math"
+        ,   noexcept   = "-fno-trapping-math"
+        }
+    else
+        maps =
+        {
+            precise    = "" -- default
+        ,   fast       = "-ffast-math"
+        ,   strict     = {"-frounding-math", "-ftrapping-math"}
+        ,   except     = "-ftrapping-math"
+        ,   noexcept   = "-fno-trapping-math"
+        }
+    end
+    return maps[level]
+end
+
 -- make the optimize flag
 function nf_optimize(self, level)
-
-    -- the maps
-    local maps = 
-    {   
+    local maps =
+    {
         none       = "-O0"
     ,   fast       = "-O1"
     ,   faster     = "-O2"
@@ -84,17 +107,13 @@ function nf_optimize(self, level)
     ,   smallest   = "-Oz" -- smaller than -Os
     ,   aggressive = "-Ofast"
     }
-
-    -- make it
-    return maps[level] 
+    return maps[level]
 end
 
 -- make the warning flag
 function nf_warning(self, level)
-
-    -- the maps
-    local maps = 
-    {   
+    local maps =
+    {
         none       = "-w"
     ,   less       = "-Wall"
     ,   more       = "-Wall"
@@ -102,7 +121,5 @@ function nf_warning(self, level)
     ,   everything = "-Weverything"
     ,   error      = "-Werror"
     }
-
-    -- make it
     return maps[level]
 end

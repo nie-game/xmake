@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -40,6 +40,10 @@ function main(target)
         local targetfile = target:targetfile()
         target:add("links", target:basename(), {interface = true})
         target:add("linkdirs", path.directory(targetfile), {interface = true})
+        if target:rule("go") then
+            -- we need add includedirs to support import modules for golang
+            target:add("includedirs", path.directory(targetfile), {interface = true})
+        end
         for _, name in ipairs({"frameworkdirs", "frameworks", "linkdirs", "links", "syslinks"}) do
             local values = _get_values_from_target(target, name)
             if values and #values > 0 then
@@ -52,7 +56,8 @@ function main(target)
     if targetkind == "binary" then
         local targetdir = target:targetdir()
         for _, dep in ipairs(target:orderdeps()) do
-            if dep:targetkind() == "shared" then
+            local depinherit = target:extraconf("deps", dep:name(), "inherit")
+            if dep:targetkind() == "shared" and (depinherit == nil or depinherit) then
                 local rpathdir = "@loader_path"
                 local subdir = path.relative(path.directory(dep:targetfile()), targetdir)
                 if subdir and subdir ~= '.' then

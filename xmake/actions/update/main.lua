@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -23,9 +23,9 @@ import("core.base.semver")
 import("core.base.option")
 import("core.base.task")
 import("core.base.process")
+import("core.base.tty")
 import("net.http")
 import("devel.git")
-import("devel.git.submodule")
 import("net.fasturl")
 import("core.base.privilege")
 import("privilege.sudo")
@@ -146,7 +146,7 @@ function _install(sourcedir)
         local installdir = is_host("windows") and os.programdir() or "~/.local/bin"
 
         -- trace
-        utils.clearline()
+        tty.erase_line_to_start().cr()
         cprintf("${yellow}  => ${clear}installing to %s .. ", installdir)
         local ok = try
         {
@@ -187,18 +187,18 @@ function _install(sourcedir)
 
         -- trace
         if ok then
-            utils.clearline()
+            tty.erase_line_to_start().cr()
             cprint("${yellow}  => ${clear}install to %s .. ${color.success}${text.success}", installdir)
         else
             raise("install failed!")
         end
     end
 
-    -- do install 
+    -- do install
     if option.get("verbose") then
         install_task()
     else
-        runjobs("update/install", install_task, {showtips = true})
+        runjobs("update/install", install_task, {progress = true})
     end
 end
 
@@ -342,7 +342,7 @@ function main()
     -- the download task
     local download_task = function ()
         for idx, url in ipairs(mainurls) do
-            utils.clearline()
+            tty.erase_line_to_start().cr()
             cprintf("${yellow}  => ${clear}downloading %s .. ", url)
             local ok = try
             {
@@ -350,7 +350,7 @@ function main()
                     os.tryrm(sourcedir)
                     if not install_from_git then
                         os.mkdir(sourcedir)
-                        local installerfile = path.join(sourcedir, win_installer_name) 
+                        local installerfile = path.join(sourcedir, win_installer_name)
                         if url:endswith(".zip") then
                             http.download(url, installerfile .. ".zip")
                             archive.extract(installerfile .. ".zip", installerfile .. ".dir")
@@ -373,7 +373,7 @@ function main()
                     end
                 }
             }
-            utils.clearline()
+            tty.erase_line_to_start().cr()
             if ok then
                 cprint("${yellow}  => ${clear}download %s .. ${color.success}${text.success}", url)
                 break
@@ -386,11 +386,11 @@ function main()
         end
     end
 
-    -- do download 
+    -- do download
     if option.get("verbose") then
         download_task()
     else
-        runjobs("update/download", download_task, {showtips = true})
+        runjobs("update/download", download_task, {progress = true})
     end
 
     -- leave environment

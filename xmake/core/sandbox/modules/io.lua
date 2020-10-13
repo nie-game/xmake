@@ -173,8 +173,23 @@ function sandbox_io.gsub(filepath, pattern, replace, opt)
     if not data then
         raise(errors)
     end
+    return data, count
+end
 
-    -- ok
+-- replace text of the given file and return replaced data
+function sandbox_io.replace(filepath, pattern, replace, opt)
+
+    -- check
+    assert(filepath)
+
+    -- format it first
+    filepath = vformat(filepath)
+
+    -- replace all
+    local data, count, errors = io.replace(filepath, pattern, replace, opt)
+    if not data then
+        raise(errors)
+    end
     return data, count
 end
 
@@ -264,7 +279,7 @@ end
 
 -- load object from the given file
 function sandbox_io.load(filepath, opt)
- 
+
     -- check
     assert(filepath)
 
@@ -297,7 +312,7 @@ function sandbox_io.save(filepath, object, opt)
     end
 end
 
--- read all data from file 
+-- read all data from file
 function sandbox_io.readfile(filepath, opt)
 
     -- check
@@ -390,7 +405,7 @@ function sandbox_io.tail(filepath, linecount, opt)
 end
 
 -- lazy loading stdfile
-setmetatable(sandbox_io, { __index = function (tbl, key)    
+setmetatable(sandbox_io, { __index = function (tbl, key)
         local val = rawget(tbl, key)
         if val == nil and (key == "stdin" or key == "stdout" or key == "stderr") then
             val = sandbox_io.stdfile("/dev/" .. key)

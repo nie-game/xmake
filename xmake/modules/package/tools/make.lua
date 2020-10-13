@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -74,7 +74,7 @@ function buildenvs(package)
     return envs
 end
 
--- build package 
+-- build package
 function build(package, configs, opt)
 
     -- init options
@@ -97,10 +97,37 @@ function build(package, configs, opt)
         end
     end
 
-    -- do configure
+    -- do build
     if is_host("bsd") then
         os.vrunv("gmake", argv, {envs = opt.envs or buildenvs(package)})
     else
         os.vrunv("make", argv, {envs = opt.envs or buildenvs(package)})
+    end
+end
+
+-- install package
+function install(package, configs)
+
+    -- pass configurations
+    local argv = {"install"}
+    if option.get("verbose") then
+        table.insert(argv, "VERBOSE=1")
+    end
+    for name, value in pairs(configs) do
+        value = tostring(value):trim()
+        if value ~= "" then
+            if type(name) == "number" then
+                table.insert(argv, value)
+            else
+                table.insert(argv, name .. "=" .. value)
+            end
+        end
+    end
+
+    -- do install
+    if is_host("bsd") then
+        os.vrunv("gmake", argv)
+    else
+        os.vrunv("make", argv)
     end
 end

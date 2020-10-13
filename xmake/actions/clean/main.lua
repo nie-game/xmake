@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -28,66 +28,10 @@ import("core.project.project")
 import("core.platform.platform")
 import("core.platform.environment")
 import("private.action.clean.remove_files")
+import("target.action.clean", {alias = "_do_clean_target"})
 
--- do clean target 
-function _do_clean_target(target)
-
-    -- is phony?
-    if target:isphony() then
-        return 
-    end
-
-    -- remove the target file 
-    remove_files(target:targetfile()) 
-
-    -- remove the symbol file 
-    remove_files(target:symbolfile()) 
-
-    -- remove the c/c++ precompiled header file 
-    remove_files(target:pcoutputfile("c")) 
-    remove_files(target:pcoutputfile("cxx")) 
-
-    -- TODO remove the header files (deprecated)
-    local _, dstheaders = target:headers()
-    remove_files(dstheaders) 
-
-    -- remove the clean files
-    remove_files(target:get("cleanfiles"))
-
-    -- remove all?
-    if option.get("all") then 
-
-        -- TODO remove the config.h file (deprecated)
-        remove_files(target:configheader()) 
-
-        -- remove all dependent files for each platform
-        remove_files(target:dependir({root = true}))
-
-        -- remove all object files for each platform
-        remove_files(target:objectdir({root = true}))
-
-        -- remove all autogen files for each platform
-        remove_files(target:autogendir({root = true}))
-    else
-
-        -- remove dependent files for the current platform
-        remove_files(target:dependir())
-
-        -- remove object files for the current platform
-        remove_files(target:objectdir())
-
-        -- remove autogen files for the current platform
-        remove_files(target:autogendir())
-    end
-end
-
--- on clean target 
+-- on clean target
 function _on_clean_target(target)
-
-    -- has been disabled?
-    if target:get("enabled") == false then
-        return 
-    end
 
     -- build target with rules
     local done = false
@@ -107,6 +51,11 @@ end
 -- clean the given target files
 function _clean_target(target)
 
+    -- has been disabled?
+    if target:get("enabled") == false then
+        return
+    end
+
     -- enter the environments of the target packages
     local oldenvs = {}
     for name, values in pairs(target:pkgenvs()) do
@@ -119,13 +68,6 @@ function _clean_target(target)
     {
         target:script("clean_before")
     ,   function (target)
-
-            -- has been disabled?
-            if target:get("enabled") == false then
-                return 
-            end
-
-            -- clean rules
             for _, r in ipairs(target:orderules()) do
                 local before_clean = r:script("clean_before")
                 if before_clean then
@@ -135,13 +77,6 @@ function _clean_target(target)
         end
     ,   target:script("clean", _on_clean_target)
     ,   function (target)
-
-            -- has been disabled?
-            if target:get("enabled") == false then
-                return 
-            end
-
-            -- clean rules
             for _, r in ipairs(target:orderules()) do
                 local after_clean = r:script("clean_after")
                 if after_clean then
@@ -166,43 +101,27 @@ function _clean_target(target)
     end
 end
 
--- clean the given target and all dependent targets
-function _clean_target_and_deps(target)
-
-    -- this target have been finished?
-    if _g.finished[target:name()] then
-        return 
+-- clean the given targets
+function _clean_targets(targets)
+    for _, target in ipairs(targets) do
+        _clean_target(target)
     end
-
-    -- remove the target
-    _clean_target(target) 
-     
-    -- exists the dependent targets?
-    for _, dep in ipairs(target:get("deps")) do
-        _clean_target_and_deps(project.target(dep))
-    end
-
-    -- finished
-    _g.finished[target:name()] = true
 end
 
--- clean target 
+-- clean target
 function _clean(targetname)
 
     -- clean the given target
     if targetname then
-        _clean_target_and_deps(project.target(targetname)) 
+        local target = project.target(targetname)
+        _clean_targets(target:orderdeps())
+        _clean_target(target)
     else
-        -- clean all targets
-        for _, target in pairs(project.targets()) do
-            _clean_target_and_deps(target) 
-        end
+        _clean_targets(project.ordertargets())
     end
 
-    -- remove all
-    if option.get("all") then 
-
-        -- remove the configure directory
+    -- remove the configure directory if remove all
+    if option.get("all") then
         remove_files(config.directory())
     end
 end
@@ -226,9 +145,7 @@ function _try_clean()
 
     -- try cleaning it
     if configfile and tool and trybuild then
-        environment.enter("toolchains")
         tool.clean()
-        environment.leave("toolchains")
     end
 end
 
@@ -247,16 +164,13 @@ function main()
     local targetname = option.get("target")
 
     -- config it first
-    task.run("config", {target = targetname, require = false})
-
-    -- init finished states
-    _g.finished = {}
+    task.run("config", {target = targetname, require = false, verbose = false})
 
     -- enter project directory
     local oldir = os.cd(project.directory())
 
     -- clean the current target
-    _clean(targetname) 
+    _clean(targetname)
 
     -- unlock the whole project
     project.unlock()

@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -24,7 +24,7 @@ import("private.tools.vstool")
 
 -- init it
 function init(self)
-   
+
     -- init ldflags
     self:set("ldflags", "-nologo", "-dynamicbase", "-nxcompat")
 
@@ -40,7 +40,7 @@ function init(self)
         -- strip
         ["-s"]                  = ""
     ,   ["-S"]                  = ""
- 
+
         -- others
     ,   ["-ftrapv"]             = ""
     ,   ["-fsanitize=address"]  = ""
@@ -51,15 +51,28 @@ end
 function get(self, name)
     local values = self._INFO[name]
     if name == "ldflags" or name == "arflags" or name == "shflags" then
-        -- switch architecture, @note does cache it in init() for generating vs201x project 
-        values = table.join(values, "-machine:" .. (config.arch() or "x86"))
+        -- switch architecture, @note does cache it in init() for generating vs201x project
+        values = table.join(values, "-machine:" .. (self:arch() or "x86"))
     end
     return values
 end
 
+-- make the strip flag
+function nf_strip(self, level)
+    -- @note we explicitly strip some useless code, because `/debug` may keep them
+    -- @see https://github.com/xmake-io/xmake/issues/907
+    --
+    local maps =
+    {
+        debug = "/opt:ref /opt:icf"
+    ,   all   = "/opt:ref /opt:icf /ltcg" -- we enable /ltcg for optimize/smallest:/Gl
+    }
+    return maps[level]
+end
+
 -- make the symbol flag
 function nf_symbol(self, level, target)
-    
+
     -- debug? generate *.pdb file
     local flags = nil
     local targetkind = target:get("kind")
@@ -70,8 +83,6 @@ function nf_symbol(self, level, target)
             flags = "-debug"
         end
     end
-
-    -- none
     return flags
 end
 
@@ -92,17 +103,16 @@ end
 
 -- make the link arguments list
 function linkargv(self, objectfiles, targetkind, targetfile, flags, opt)
-
-    -- init arguments
-    local argv = table.join(flags, "-out:" .. os.args(targetfile), objectfiles)
-
-    -- too long arguments for windows? 
     opt = opt or {}
-    local args = os.args(argv, {escape = true})
-    if #args > 1024 and not opt.rawargs then
-        local argsfile = os.tmpfile(args) .. ".args.txt" 
-        io.writefile(argsfile, args)
-        argv = {"@" .. argsfile}
+    local argv = table.join(flags, "-out:" .. targetfile, objectfiles)
+    if not opt.rawargs then
+        argv = winos.cmdargv(argv)
+    end
+    -- @note we cannot put -lib/-dll to @args.txt
+    if targetkind == "static" then
+        table.insert(argv, 1, "-lib")
+    elseif targetkind == "shared" then
+        table.insert(argv, 1, "-dll")
     end
     return self:program(), argv
 end
@@ -116,9 +126,10 @@ function link(self, objectfiles, targetkind, targetfile, flags, opt)
     try
     {
         function ()
-    
+
             -- use vstool to link and enable vs_unicode_output @see https://github.com/xmake-io/xmake/issues/528
-            vstool.runv(linkargv(self, objectfiles, targetkind, targetfile, flags, opt))
+            local program, argv = linkargv(self, objectfiles, targetkind, targetfile, flags, opt)
+            vstool.runv(program, argv, {envs = self:runenvs()})
         end,
         catch
         {

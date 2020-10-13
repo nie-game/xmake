@@ -3,13 +3,14 @@ import("core.base.socket")
 function main(addr)
 
     addr = addr or path.join(os.tmpdir(), "echo.socket")
+    os.tryrm(addr)
     local sock = socket.bind_unix(addr)
     sock:listen(20)
-    print("%s: listening %s ..", sock, addr) 
-    while true do 
+    print("%s: listening %s ..", sock, addr)
+    while true do
         local sock_client = sock:accept()
         if sock_client then
-            print("%s: accepted", sock_client) 
+            print("%s: accepted", sock_client)
             local count = 0
             local result = nil
             while true do

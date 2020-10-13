@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -173,7 +173,7 @@ function table.inherit2(self, ...)
                 else
                     if self[k] == nil then
                         self[k] = v
-                    else 
+                    else
                         self["_super_" .. k] = v
                     end
                 end
@@ -261,13 +261,8 @@ end
 -- remove repeat from the given array
 function table.unique(array, barrier)
 
-    -- remove repeat for array
     if table.is_array(array) then
-
-        -- not only one?
         if table.getn(array) ~= 1 then
-
-            -- done
             local exists = {}
             local unique = {}
             for _, v in ipairs(array) do
@@ -284,13 +279,9 @@ function table.unique(array, barrier)
                     table.insert(unique, v)
                 end
             end
-
-            -- update it
             array = unique
         end
     end
-
-    -- ok
     return array
 end
 

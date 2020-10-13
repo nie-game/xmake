@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -26,7 +26,7 @@ rule("xcode.bundle")
 
     -- we must set kind before target.on_load(), may we will use target in on_load()
     before_load(function (target)
-        
+
         -- get bundle directory
         local targetdir = target:targetdir()
         local bundledir = path.join(targetdir, target:basename() .. ".bundle")
@@ -42,7 +42,7 @@ rule("xcode.bundle")
         target:data_set("xcode.bundle.contentsdir", contentsdir)
         target:data_set("xcode.bundle.resourcesdir", resourcesdir)
 
-        -- set target info for bundle 
+        -- set target info for bundle
         target:set("filename", target:basename())
 
         -- generate binary as bundle, we cannot set `-shared` or `-dynamiclib`
@@ -60,53 +60,43 @@ rule("xcode.bundle")
         import("core.theme.theme")
         import("core.project.depend")
         import("private.tools.codesign")
+        import("private.utils.progress")
 
         -- get bundle and resources directory
         local bundledir = path.absolute(target:data("xcode.bundle.rootdir"))
         local contentsdir = path.absolute(target:data("xcode.bundle.contentsdir"))
         local resourcesdir = path.absolute(target:data("xcode.bundle.resourcesdir"))
 
-        -- need re-generate it?
-        local dependfile = target:dependfile(bundledir)
-        local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
-        if not depend.is_changed(dependinfo, {lastmtime = os.mtime(dependfile)}) then
-            return 
-        end
-     
-        -- trace progress info
-        cprintf("${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} ", opt.progress)
-        if option.get("verbose") then
-            cprint("${dim color.build.target}generating.xcode.$(mode) %s", path.filename(bundledir))
-        else
-            cprint("${color.build.target}generating.xcode.$(mode) %s", path.filename(bundledir))
-        end
+        -- do build if changed
+        depend.on_changed(function ()
 
-        -- copy target file
-        if is_plat("macosx") then
-            os.vcp(target:targetfile(), path.join(contentsdir, "MacOS", path.filename(target:targetfile())))
-        else
-            os.vcp(target:targetfile(), path.join(contentsdir, path.filename(target:targetfile())))
-        end
+            -- trace progress info
+            progress.show(opt.progress, "${color.build.target}generating.xcode.$(mode) %s", path.filename(bundledir))
 
-        -- copy resource files
-        local srcfiles, dstfiles = target:installfiles(resourcesdir)
-        if srcfiles and dstfiles then
-            local i = 1
-            for _, srcfile in ipairs(srcfiles) do
-                local dstfile = dstfiles[i]
-                if dstfile then
-                    os.vcp(srcfile, dstfile)
-                end
-                i = i + 1
+            -- copy target file
+            if is_plat("macosx") then
+                os.vcp(target:targetfile(), path.join(contentsdir, "MacOS", path.filename(target:targetfile())))
+            else
+                os.vcp(target:targetfile(), path.join(contentsdir, path.filename(target:targetfile())))
             end
-        end
 
-        -- do codesign
-        codesign(bundledir, target:values("xcode.codesign_identity") or get_config("xcode_codesign_identity"))
+            -- copy resource files
+            local srcfiles, dstfiles = target:installfiles(resourcesdir)
+            if srcfiles and dstfiles then
+                local i = 1
+                for _, srcfile in ipairs(srcfiles) do
+                    local dstfile = dstfiles[i]
+                    if dstfile then
+                        os.vcp(srcfile, dstfile)
+                    end
+                    i = i + 1
+                end
+            end
 
-        -- update files and values to the dependent file
-        dependinfo.files = {bundledir}
-        depend.save(dependinfo, dependfile)
+            -- do codesign
+            codesign(bundledir, target:values("xcode.codesign_identity") or get_config("xcode_codesign_identity"))
+
+        end, {dependfile = target:dependfile(bundledir), files = {bundledir, target:targetfile()}})
     end)
 
     on_install(function (target)

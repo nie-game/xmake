@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -21,35 +21,39 @@
 -- define theme
 theme("emoji")
 
-    -- the success status 
+    -- the success status
     set_text("success", "heavy_check_mark")
     set_color("success", "")
 
-    -- the failure status 
+    -- the failure status
     set_text("failure", "x")
     set_color("failure", "")
 
-    -- the nothing status 
+    -- the nothing status
     set_text("nothing", "o")
     set_color("nothing", "")
 
     -- the error info
     set_text("error", "exclamation error")
-    set_color("error", "red")
+    set_color("error", "red bright")
 
     -- the warning info
     set_text("warning", "warning $warning")
-    set_color("warning", "yellow")
+    set_color("warning", "yellow bright")
 
     -- the building progress
     set_text("build.progress_format", "[%3d%%]")
-    set_color("build.progress", "green")
+    set_text("build.progress_style", "scroll")
+    set_color("build.progress", "green bright")
 
     -- the building object file
     set_color("build.object", "")
 
     -- the building target file
-    set_color("build.target", "magenta")
+    set_color("build.target", "magenta bright")
+
+    -- the spinner chars
+    set_text("spinner.chars", '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏')
 
     -- color dump
     set_text("dump.default_format", "%s")

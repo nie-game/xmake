@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -102,7 +102,7 @@ function _instance:_api_set_values(name, ...)
     -- get extra config
     local values = {...}
     local extra_config = values[#values]
-    if table.is_dictionary(extra_config) then 
+    if table.is_dictionary(extra_config) then
         table.remove(values)
     else
         extra_config = nil
@@ -115,7 +115,12 @@ function _instance:_api_set_values(name, ...)
     local handled_values = self:_api_handle(values)
 
     -- save values
-    scope[name] = handled_values
+    if type(handled_values) == "table" and #handled_values == 0 then
+        -- set("xx", nil)? remove it
+        scope[name] = nil
+    else
+        scope[name] = handled_values
+    end
 
     -- save extra config
     if extra_config then
@@ -136,7 +141,7 @@ function _instance:_api_add_values(name, ...)
     -- get extra config
     local values = {...}
     local extra_config = values[#values]
-    if table.is_dictionary(extra_config) then 
+    if table.is_dictionary(extra_config) then
         table.remove(values)
     else
         extra_config = nil
@@ -167,14 +172,11 @@ function _instance:_api_set_keyvalues(name, key, ...)
     -- get extra config
     local values = {...}
     local extra_config = values[#values]
-    if table.is_dictionary(extra_config) then 
+    if table.is_dictionary(extra_config) then
         table.remove(values)
     else
         extra_config = nil
     end
-
-    -- expand values if only one
-    values = table.unwrap(values)
 
     -- save values to "name"
     scope[name] = scope[name] or {}
@@ -207,18 +209,19 @@ function _instance:_api_add_keyvalues(name, key, ...)
     -- get extra config
     local values = {...}
     local extra_config = values[#values]
-    if table.is_dictionary(extra_config) then 
+    if table.is_dictionary(extra_config) then
         table.remove(values)
     else
         extra_config = nil
     end
 
-    -- expand values if only one
-    values = table.unwrap(values)
-
     -- save values to "name"
     scope[name] = scope[name] or {}
-    scope[name][key] = self:_api_handle(table.join2(table.wrap(scope[name][key]), values))
+    if scope[name][key] == nil then
+        scope[name][key] = self:_api_handle(values)
+    else
+        scope[name][key] = self:_api_handle(table.join2(table.wrap(scope[name][key]), values))
+    end
 
     -- save values to "name.key"
     local name_key = name .. "." .. key
@@ -277,8 +280,8 @@ function _instance:_api_add_dictionary(name, dict_or_key, value)
     end
 end
 
--- set the api pathes to the scope info
-function _instance:_api_set_pathes(name, ...)
+-- set the api paths to the scope info
+function _instance:_api_set_paths(name, ...)
 
     -- get the scope info
     local scope = self._INFO
@@ -289,7 +292,7 @@ function _instance:_api_set_pathes(name, ...)
     -- get extra config
     local values = {...}
     local extra_config = values[#values]
-    if table.is_dictionary(extra_config) then 
+    if table.is_dictionary(extra_config) then
         table.remove(values)
     else
         extra_config = nil
@@ -298,27 +301,27 @@ function _instance:_api_set_pathes(name, ...)
     -- expand values
     values = table.join(unpack(values))
 
-    -- translate pathes
-    local pathes = interp:_api_translate_pathes(values, "set_" .. name, 5)
+    -- translate paths
+    local paths = interp:_api_translate_paths(values, "set_" .. name, 5)
 
     -- save values
-    scope[name] = self:_api_handle(pathes)
+    scope[name] = self:_api_handle(paths)
 
     -- save extra config
     if extra_config then
         scope["__extra_" .. name] = scope["__extra_" .. name] or {}
         local extrascope = scope["__extra_" .. name]
-        for _, value in ipairs(pathes) do
+        for _, value in ipairs(paths) do
             extrascope[value] = extra_config
         end
     end
 
     -- save api source info, e.g. call api() in sourcefile:linenumber
-    self:_api_save_sourceinfo_to_scope(scope, name, pathes)
+    self:_api_save_sourceinfo_to_scope(scope, name, paths)
 end
 
--- add the api pathes to the scope info
-function _instance:_api_add_pathes(name, ...)
+-- add the api paths to the scope info
+function _instance:_api_add_paths(name, ...)
 
     -- get the scope info
     local scope = self._INFO
@@ -329,7 +332,7 @@ function _instance:_api_add_pathes(name, ...)
     -- get extra config
     local values = {...}
     local extra_config = values[#values]
-    if table.is_dictionary(extra_config) then 
+    if table.is_dictionary(extra_config) then
         table.remove(values)
     else
         extra_config = nil
@@ -338,27 +341,27 @@ function _instance:_api_add_pathes(name, ...)
     -- expand values
     values = table.join(unpack(values))
 
-    -- translate pathes
-    local pathes = interp:_api_translate_pathes(values, "add_" .. name, 5)
+    -- translate paths
+    local paths = interp:_api_translate_paths(values, "add_" .. name, 5)
 
     -- save values
-    scope[name] = self:_api_handle(table.join2(table.wrap(scope[name]), pathes))
+    scope[name] = self:_api_handle(table.join2(table.wrap(scope[name]), paths))
 
     -- save extra config
     if extra_config then
         scope["__extra_" .. name] = scope["__extra_" .. name] or {}
         local extrascope = scope["__extra_" .. name]
-        for _, value in ipairs(pathes) do
+        for _, value in ipairs(paths) do
             extrascope[value] = extra_config
         end
     end
 
     -- save api source info, e.g. call api() in sourcefile:linenumber
-    self:_api_save_sourceinfo_to_scope(scope, name, pathes)
+    self:_api_save_sourceinfo_to_scope(scope, name, paths)
 end
 
--- remove the api pathes to the scope info
-function _instance:_api_del_pathes(name, ...)
+-- remove the api paths to the scope info
+function _instance:_api_del_paths(name, ...)
 
     -- get the scope info
     local scope = self._INFO
@@ -369,20 +372,20 @@ function _instance:_api_del_pathes(name, ...)
     -- expand values
     values = table.join(...)
 
-    -- translate pathes
-    local pathes = interp:_api_translate_pathes(values, "del_" .. name, 5)
+    -- translate paths
+    local paths = interp:_api_translate_paths(values, "del_" .. name, 5)
 
-    -- mark these pathes as deleted
-    local pathes_deleted = {}
-    for _, pathname in ipairs(pathes) do
-        table.insert(pathes_deleted, "__del_" .. pathname)
+    -- mark these paths as deleted
+    local paths_deleted = {}
+    for _, pathname in ipairs(paths) do
+        table.insert(paths_deleted, "__del_" .. pathname)
     end
 
     -- save values
-    scope[name] = self:_api_handle(table.join2(table.wrap(scope[name]), pathes_deleted))
+    scope[name] = self:_api_handle(table.join2(table.wrap(scope[name]), paths_deleted))
 
     -- save api source info, e.g. call api() in sourcefile:linenumber
-    self:_api_save_sourceinfo_to_scope(scope, name, pathes)
+    self:_api_save_sourceinfo_to_scope(scope, name, paths)
 end
 
 -- get the scope kind
@@ -509,7 +512,7 @@ end
 
 -- get the extra configuration
 --
--- e.g. 
+-- e.g.
 --
 -- add_includedirs("inc", {public = true})
 --
@@ -546,7 +549,12 @@ function _instance:extraconf(name, item, key)
     return value
 end
 
--- new an scope instance
+-- clone a new instance from the current
+function _instance:clone()
+    return _instance.new(self:kind(), self:info(), {interpreter = self:interpreter(), remove_repeat = self._REMOVE_REPEAT, enable_filter = self._ENABLE_FILTER})
+end
+
+-- new a scope instance
 function scopeinfo.new(...)
     return _instance.new(...)
 end

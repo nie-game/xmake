@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -44,6 +44,11 @@ function program:init(name, argv)
     -- disable newline
     curses.nl(false)
 
+    -- init mouse support
+    if curses.KEY_MOUSE then
+        curses.mousemask(curses.ALL_MOUSE_EVENTS)
+    end
+
     -- to filter characters being output to the screen
     -- this will filter all characters where a chtype or chstr is used
     curses.map_output(true)
@@ -53,8 +58,8 @@ function program:init(name, argv)
     curses.map_keyboard(true)
 
     -- init colors
-    if (curses.has_colors()) then 
-        curses.start_color() 
+    if (curses.has_colors()) then
+        curses.start_color()
     end
 
     -- disable main window cursor
@@ -103,7 +108,7 @@ function program:main_window()
     -- init main window if not exists
     local main_window = self._MAIN_WINDOW
     if not main_window then
-        
+
         -- init main window
         main_window = curses.init()
         assert(main_window, "cannot init main window!")
@@ -135,6 +140,11 @@ function program:event()
     -- get input key
     local key_code, key_name, key_meta = self:_input_key()
     if key_code then
+        if curses.KEY_MOUSE and key_code == curses.KEY_MOUSE then
+            local code, x, y = curses.getmouse()
+            local name = self:_mouse_map()[code]
+            return event.mouse{code, x, y, name}
+        end
         return event.keyboard{key_code, key_name, key_meta}
     end
 end
@@ -165,7 +175,7 @@ function program:on_event(e)
             return true
         -- refresh?
         elseif e.key_name == "Refresh" then
-            self:invalidate() 
+            self:invalidate()
             return true
         -- ctrl+c? quit program
         elseif e.key_name == "CtrlC" then
@@ -181,7 +191,7 @@ end
 
 -- put an event to view
 function program:put_event(e)
-    
+
     -- init event queue
     self._EVENT_QUEUE = self._EVENT_QUEUE or {}
 
@@ -333,6 +343,21 @@ function program:_key_map()
     return self._KEYMAP
 end
 
+-- get mouse map
+function program:_mouse_map()
+    if not self._MOUSEMAP then
+        -- must be defined dynamically since it depends
+        -- on curses implementation
+        self._MOUSEMAP = {}
+        for n, v in pairs(curses) do
+            if (n:match('MOUSE') and n ~= 'KEY_MOUSE') or n:match('BUTTON') then
+                self._MOUSEMAP[v] = n
+            end
+        end
+    end
+    return self._MOUSEMAP
+end
+
 -- get input key
 function program:_input_key()
 
@@ -341,7 +366,7 @@ function program:_input_key()
 
     -- get input character
     local ch = main_window:getch()
-    if not ch then 
+    if not ch then
         return
     end
 
@@ -373,17 +398,17 @@ function program:_input_key()
                 end
 
                 -- wait some time, 50ms
-                curses.napms(50) 
+                curses.napms(50)
                 t = t + 50
             end
 
             -- nothing was typed... return Esc
-            if not ch then 
-                return 27, "Esc", false 
+            if not ch then
+                return 27, "Esc", false
             end
         end
-        if ch > 96 and ch < 123 then 
-            ch = ch - 32 
+        if ch > 96 and ch < 123 then
+            ch = ch - 32
         end
     end
 

@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -28,7 +28,7 @@ language("golang")
     set_sourceflags {gc = "gcflags"}
 
     -- set target kinds
-    set_targetkinds {binary = "gc-ld", static = "gc-ar"}
+    set_targetkinds {binary = "gcld", static = "gcar"}
 
     -- set target flags
     set_targetflags {binary = "ldflags", static = "arflags"}
@@ -49,7 +49,7 @@ language("golang")
     on_check_main("check_main")
 
     -- set name flags
-    set_nameflags 
+    set_nameflags
     {
         object =
         {
@@ -61,9 +61,10 @@ language("golang")
         ,   "target.defines"
         ,   "target.undefines"
         ,   "target.includedirs"
-        ,   "platform.includedirs"
-        ,   "platform.defines"
-        ,   "platform.undefines"
+        ,   "option.includedirs"
+        ,   "toolchain.includedirs"
+        ,   "toolchain.defines"
+        ,   "toolchain.undefines"
         }
     ,   binary =
         {
@@ -72,15 +73,15 @@ language("golang")
         ,   "target.strip"
         ,   "target.symbols"
         ,   "option.linkdirs"
-        ,   "platform.linkdirs"
+        ,   "toolchain.linkdirs"
         ,   "config.links"
         ,   "target.links"
         ,   "option.links"
-        ,   "platform.links"
+        ,   "toolchain.links"
         ,   "config.syslinks"
         ,   "target.syslinks"
         ,   "option.syslinks"
-        ,   "platform.syslinks"
+        ,   "toolchain.syslinks"
         }
     ,   shared =
         {
@@ -89,27 +90,27 @@ language("golang")
         ,   "target.strip"
         ,   "target.symbols"
         ,   "option.linkdirs"
-        ,   "platform.linkdirs"
+        ,   "toolchain.linkdirs"
         ,   "config.links"
         ,   "target.links"
         ,   "option.links"
-        ,   "platform.links"
+        ,   "toolchain.links"
         ,   "config.syslinks"
         ,   "target.syslinks"
         ,   "option.syslinks"
-        ,   "platform.syslinks"
+        ,   "toolchain.syslinks"
         }
     }
 
     -- set menu
     set_menu {
-                config = 
-                {   
+                config =
+                {
                     {category = "Cross Complation Configuration/Compiler Configuration"        }
                 ,   {nil, "go",         "kv", nil,          "The Golang Compiler"              }
 
                 ,   {category = "Cross Complation Configuration/Linker Configuration"          }
-                ,   {nil, "gc-ld",      "kv", nil,          "The Golang Linker"                }
+                ,   {nil, "gcld",      "kv", nil,          "The Golang Linker"                }
                 ,   {nil, "go-ar",      "kv", nil,          "The Golang Static Library Linker" }
 
                 ,   {category = "Cross Complation Configuration/Builtin Flags Configuration"   }

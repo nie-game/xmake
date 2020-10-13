@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -32,7 +32,7 @@ function _get_macro_defines(snippets, extension, opt)
 
     -- get defines
     local results = {}
-    local defines = try { function () return os.iorunv(opt.program, table.join(opt.flags or {}, {"-dM", "-E", sourcefile})) end }
+    local defines = try { function () return os.iorunv(opt.program, table.join(opt.flags or {}, {"-dM", "-E", sourcefile}), {envs = opt.envs}) end }
     if defines then
         for _, define in ipairs(defines:split("\n")) do
             local name = define:match("#define%s+(.-)%s+")
@@ -41,11 +41,7 @@ function _get_macro_defines(snippets, extension, opt)
             end
         end
     end
-
-    -- remove files
     os.tryrm(sourcefile)
-
-    -- ok?
     return results
 end
 
@@ -111,13 +107,11 @@ function check_features(opt)
             end
         end
     end
-
-    -- ok?
     return results
 end
 
--- get features 
--- 
+-- get features
+--
 -- @param opt   the argument options, e.g. {toolname = "", program = "", programver = "", flags = {}}
 --
 -- @return      the features

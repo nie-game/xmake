@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -81,14 +81,14 @@ end
 -- find dotnet toolchains
 --
 -- @param sdkdir    the dotnet directory
--- @param opt       the argument options, e.g. {verbose = true, force = false, version = "5.9.1"} 
+-- @param opt       the argument options, e.g. {verbose = true, force = false, version = "5.9.1"}
 --
 -- @return          the dotnet toolchains. e.g. {sdkver = ..., sdkdir = ..., bindir = .., libdir = ..., includedir = ..., .. }
 --
--- @code 
+-- @code
 --
 -- local toolchains = find_dotnet("~/dotnet")
--- 
+--
 -- @endcode
 --
 function main(sdkdir, opt)
@@ -102,7 +102,7 @@ function main(sdkdir, opt)
     if not opt.force and cacheinfo.dotnet then
         return cacheinfo.dotnet
     end
-       
+
     -- find dotnet
     local dotnet = _find_dotnet(sdkdir or config.get("dotnet") or global.get("dotnet"), opt.version or config.get("dotnet_sdkver"))
     if dotnet then
@@ -113,14 +113,14 @@ function main(sdkdir, opt)
 
         -- trace
         if opt.verbose or option.get("verbose") then
-            cprint("checking for the .Net SDK directory ... ${color.success}%s", dotnet.sdkdir)
-            cprint("checking for the .Net SDK version ... ${color.success}%s", dotnet.sdkver)
+            cprint("checking for .Net SDK directory ... ${color.success}%s", dotnet.sdkdir)
+            cprint("checking for .Net SDK version ... ${color.success}%s", dotnet.sdkver)
         end
     else
 
         -- trace
         if opt.verbose or option.get("verbose") then
-            cprint("checking for the .Net SDK directory ... ${color.nothing}${text.nothing}")
+            cprint("checking for .Net SDK directory ... ${color.nothing}${text.nothing}")
         end
     end
 

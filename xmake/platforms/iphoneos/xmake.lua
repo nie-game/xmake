@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -31,21 +31,28 @@ platform("iphoneos")
     set_archs("arm64", "armv7", "armv7s", "i386", "x86_64")
 
     -- set formats
-    set_formats {static = "lib$(name).a", object = "$(name).o", shared = "lib$(name).dylib", symbol = "$(name).dSYM"}
+    set_formats("static", "lib$(name).a")
+    set_formats("object", "$(name).o")
+    set_formats("shared", "lib$(name).dylib")
+    set_formats("symbol", "$(name).dSYM")
 
-    -- on check project configuration
-    on_config_check("config")
+    -- on check
+    on_check(function (platform)
+        import("core.project.config")
+        local arch = config.get("arch")
+        if not arch then
+            config.set("arch", "arm64")
+            cprint("checking for architecture ... ${color.success}%s", config.get("arch"))
+        end
+    end)
 
-    -- on check global configuration
-    on_global_check("global")
-
-    -- on load
-    on_load("load")
+    -- set toolchains
+    set_toolchains("envs", "xcode")
 
     -- set menu
     set_menu {
-                config = 
-                {   
+                config =
+                {
                     {category = "XCode SDK Configuration"                                                    }
                 ,   {nil, "xcode",                   "kv", "auto",       "The Xcode Application Directory"   }
                 ,   {nil, "xcode_sdkver",            "kv", "auto",       "The SDK Version for Xcode"         }
@@ -55,8 +62,8 @@ platform("iphoneos")
                 ,   {nil, "target_minver",           "kv", "auto",       "The Target Minimal Version"        }
                 }
 
-            ,   global = 
-                {   
+            ,   global =
+                {
                     {category = "XCode SDK Configuration"                                                    }
                 ,   {nil, "xcode",                   "kv", "auto",       "The Xcode Application Directory"   }
                 ,   {nil, "xcode_bundle_identifier", "kv", "auto",       "The Bundle Identifier for Xcode"   }

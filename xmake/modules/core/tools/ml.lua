@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -26,7 +26,7 @@ import("private.tools.vstool")
 -- @see https://docs.microsoft.com/en-us/cpp/assembler/masm/ml-and-ml64-command-line-reference
 --
 function init(self)
-   
+
     -- init asflags
     if self:program():find("64") then
         self:set("asflags", "-nologo")
@@ -35,7 +35,7 @@ function init(self)
     end
 
     -- init flags map
-    self:set("mapflags", 
+    self:set("mapflags",
     {
         -- symbols
         ["-g"]                      = "-Z7"
@@ -61,8 +61,8 @@ end
 function nf_warning(self, level)
 
     -- the maps
-    local maps = 
-    {   
+    local maps =
+    {
         none         = "-w"
     ,   less         = "-W1"
     ,   more         = "-W3"
@@ -72,7 +72,7 @@ function nf_warning(self, level)
     }
 
     -- make it
-    return maps[level] 
+    return maps[level]
 end
 
 -- make the define flag
@@ -91,12 +91,12 @@ function nf_includedir(self, dir)
 end
 
 -- make the compile arguments list
-function _compargv1(self, sourcefile, objectfile, flags)
+function compargv(self, sourcefile, objectfile, flags)
     return self:program(), table.join("-c", flags, "-Fo" .. os.args(objectfile), sourcefile)
 end
 
 -- compile the source file
-function _compile1(self, sourcefile, objectfile, dependinfo, flags)
+function compile(self, sourcefile, objectfile, dependinfo, flags)
 
     -- ensure the object directory
     os.mkdir(path.directory(objectfile))
@@ -105,7 +105,8 @@ function _compile1(self, sourcefile, objectfile, dependinfo, flags)
     {
         function ()
             -- @note we need not uses vstool.runv to enable unicode output for ml.exe
-            os.runv(_compargv1(self, sourcefile, objectfile, flags))
+            local program, argv = compargv(self, sourcefile, objectfile, flags)
+            os.runv(program, argv, {envs = self:runenvs()})
         end,
         catch
         {
@@ -123,25 +124,5 @@ function _compile1(self, sourcefile, objectfile, dependinfo, flags)
             end
         }
     }
-end
-
--- make the compile arguments list
-function compargv(self, sourcefiles, objectfile, flags)
-
-    -- only support single source file now
-    assert(type(sourcefiles) ~= "table", "'object:sources' not support!")
-
-    -- for only single source file
-    return _compargv1(self, sourcefiles, objectfile, flags)
-end
-
--- compile the source file
-function compile(self, sourcefiles, objectfile, dependinfo, flags)
-
-    -- only support single source file now
-    assert(type(sourcefiles) ~= "table", "'object:sources' not support!")
-
-    -- for only single source file
-    _compile1(self, sourcefiles, objectfile, dependinfo, flags)
 end
 

@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -68,7 +68,7 @@ function main()
     local targetname = option.get("target")
 
     -- config it first
-    task.run("config", {target = targetname, require = "n"})
+    task.run("config", {target = targetname, require = "n", verbose = false})
 
     -- check targets first
     _check_targets(targetname)
@@ -116,19 +116,14 @@ function main()
 
                 -- continue to install with administrator permission?
                 local ok = false
-                if sudo.has() then
+                if sudo.has() and option.get("admin") then
 
-                    -- confirm to install?
-                    local confirm = utils.confirm({default = true, description = "try continue to install with administrator permission again"})
-                    if confirm then
+                    -- install target with administrator permission
+                    sudo.runl(path.join(os.scriptdir(), "install_admin.lua"), {targetname or ifelse(option.get("all"), "__all", "__def"), option.get("installdir"), option.get("prefix")})
 
-                        -- install target with administrator permission
-                        sudo.runl(path.join(os.scriptdir(), "install_admin.lua"), {targetname or ifelse(option.get("all"), "__all", "__def"), option.get("installdir"), option.get("prefix")})
-
-                        -- trace
-                        cprint("${color.success}install ok!")
-                        ok = true
-                    end
+                    -- trace
+                    cprint("${color.success}install ok!")
+                    ok = true
                 end
                 assert(ok, "install failed, %s", errors or "unknown reason")
             end

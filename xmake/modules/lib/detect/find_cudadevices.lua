@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      OpportunityLiu
@@ -125,7 +125,7 @@ function _find_devices(verbose)
 
     -- get cuda devices
     local sourcefile = path.join(os.programdir(), "scripts", "find_cudadevices.cpp")
-    local outfile = os.tmpfile()
+    local outfile = os.tmpfile({ramdisk = false}) -- no execution permision in docker's /shm
     local compile_errors = nil
     local results, errors = try
     {
@@ -223,7 +223,7 @@ end
 
 function _order_by_flops(devices)
 
-    local ngpu_arch_cores_per_sm = 
+    local ngpu_arch_cores_per_sm =
     {
         [30] =    192
     ,   [32] =    192
@@ -238,6 +238,7 @@ function _order_by_flops(devices)
     ,   [70] =     64
     ,   [72] =     64
     ,   [75] =     64
+    ,   [80] =     64
     }
 
     for _, dev in ipairs(devices) do

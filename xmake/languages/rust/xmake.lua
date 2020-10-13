@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -28,7 +28,7 @@ language("rust")
     set_sourceflags {rc = "rcflags"}
 
     -- set target kinds
-    set_targetkinds {binary = "rc-ld", static = "rc-ar", shared = "rc-sh"}
+    set_targetkinds {binary = "rcld", static = "rcar", shared = "rcsh"}
 
     -- set target flags
     set_targetflags {binary = "ldflags", static = "arflags", shared = "shflags"}
@@ -49,7 +49,7 @@ language("rust")
     on_check_main("check_main")
 
     -- set name flags
-    set_nameflags 
+    set_nameflags
     {
         object =
         {
@@ -67,8 +67,8 @@ language("rust")
         ,   "target.symbols"
         ,   "option.linkdirs"
         ,   "option.rpathdirs"
-        ,   "platform.linkdirs"
-        ,   "platform.rpathdirs"
+        ,   "toolchain.linkdirs"
+        ,   "toolchain.rpathdirs"
         }
     ,   shared =
         {
@@ -77,9 +77,9 @@ language("rust")
         ,   "target.strip"
         ,   "target.symbols"
         ,   "option.linkdirs"
-        ,   "platform.linkdirs"
+        ,   "toolchain.linkdirs"
         }
-    ,   static = 
+    ,   static =
         {
             "target.strip"
         ,   "target.symbols"
@@ -88,18 +88,18 @@ language("rust")
 
     -- set menu
     set_menu {
-                config = 
-                {   
+                config =
+                {
                     {category = "Cross Complation Configuration/Compiler Configuration"        }
                 ,   {nil, "rc",         "kv", nil,          "The Rust Compiler"                }
 
                 ,   {category = "Cross Complation Configuration/Linker Configuration"          }
-                ,   {nil, "rc-ld",      "kv", nil,          "The Rust Linker"                  }
-                ,   {nil, "rc-ar",      "kv", nil,          "The Rust Static Library Archiver" }
-                ,   {nil, "rc-sh",      "kv", nil,          "The Rust Shared Library Linker"   }
+                ,   {nil, "rcld",      "kv", nil,          "The Rust Linker"                  }
+                ,   {nil, "rcar",      "kv", nil,          "The Rust Static Library Archiver" }
+                ,   {nil, "rcsh",      "kv", nil,          "The Rust Shared Library Linker"   }
 
                 ,   {category = "Cross Complation Configuration/Builtin Flags Configuration"   }
                 ,   {nil, "linkdirs",   "kv", nil,          "The Link Search Directories"      }
                 }
-            } 
+            }
 

@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -27,7 +27,7 @@ import("core.project.config")
 import("core.project.project")
 import("core.platform.platform")
 
--- package library 
+-- package library
 function _package_library(target)
 
     -- the output directory
@@ -37,18 +37,28 @@ function _package_library(target)
     local targetname = target:name()
 
     -- copy the library file to the output directory
-    os.cp(target:targetfile(), format("%s/%s.pkg/$(plat)/$(arch)/lib/$(mode)/%s", outputdir, targetname, path.filename(target:targetfile()))) 
+    os.vcp(target:targetfile(), format("%s/%s.pkg/$(plat)/$(arch)/lib/$(mode)/%s", outputdir, targetname, path.filename(target:targetfile())))
 
     -- copy the symbol file to the output directory
     local symbolfile = target:symbolfile()
     if os.isfile(symbolfile) then
-        os.cp(symbolfile, format("%s/%s.pkg/$(plat)/$(arch)/lib/$(mode)/%s", outputdir, targetname, path.filename(symbolfile))) 
+        os.vcp(symbolfile, format("%s/%s.pkg/$(plat)/$(arch)/lib/$(mode)/%s", outputdir, targetname, path.filename(symbolfile)))
+    end
+
+    -- copy *.lib for shared/windows (*.dll) target
+    -- @see https://github.com/xmake-io/xmake/issues/787
+    if target:targetkind() == "shared" and is_plat("windows", "mingw") then
+        local targetfile = target:targetfile()
+        local targetfile_lib = path.join(path.directory(targetfile), path.basename(targetfile) .. ".lib")
+        if os.isfile(targetfile_lib) then
+            os.vcp(targetfile_lib, format("%s/%s.pkg/$(plat)/$(arch)/lib/$(mode)/", outputdir, targetname))
+        end
     end
 
     -- copy the config.h to the output directory (deprecated)
     local configheader = target:configheader()
     if configheader then
-        os.cp(configheader, format("%s/%s.pkg/$(plat)/$(arch)/include/%s", outputdir, targetname, path.filename(configheader))) 
+        os.vcp(configheader, format("%s/%s.pkg/$(plat)/$(arch)/include/%s", outputdir, targetname, path.filename(configheader)))
     end
 
     -- copy headers
@@ -58,13 +68,13 @@ function _package_library(target)
         for _, srcheader in ipairs(srcheaders) do
             local dstheader = dstheaders[i]
             if dstheader then
-                os.cp(srcheader, dstheader)
+                os.vcp(srcheader, dstheader)
             end
             i = i + 1
         end
     end
 
-    -- make xmake.lua 
+    -- make xmake.lua
     local file = io.open(format("%s/%s.pkg/xmake.lua", outputdir, targetname), "w")
     if file then
         file:print("option(\"%s\")", targetname)
@@ -81,18 +91,18 @@ function _package_library(target)
     end
 end
 
--- do package target 
+-- do package target
 function _do_package_target(target)
 
     -- is phony target?
     if target:isphony() then
-        return 
+        return
     end
 
     -- get kind
     local kind = target:targetkind()
 
-    -- get script 
+    -- get script
     local scripts =
     {
         binary = function (target) end
@@ -104,15 +114,15 @@ function _do_package_target(target)
     assert(scripts[kind], "this target(%s) with kind(%s) can not be packaged!", target:name(), kind)
 
     -- package it
-    scripts[kind](target) 
+    scripts[kind](target)
 end
 
--- package target 
+-- package target
 function _on_package_target(target)
 
     -- has been disabled?
     if target:get("enabled") == false then
-        return 
+        return
     end
 
     -- build target with rules
@@ -130,8 +140,8 @@ function _on_package_target(target)
     _do_package_target(target)
 end
 
--- package the given target 
-function _package(target)
+-- package the given target
+function _package_target(target)
 
     -- enter project directory
     local oldir = os.cd(project.directory())
@@ -184,35 +194,22 @@ function _package(target)
     os.cd(oldir)
 end
 
--- package the given target and deps
-function _package_target_and_deps(target)
-
-    -- this target have been finished?
-    if _g.finished[target:name()] then
-        return 
+-- package the given targets
+function _package_targets(targets)
+    for _, target in ipairs(targets) do
+        _package_target(target)
     end
-
-    -- package for all dependent targets
-    for _, depname in ipairs(target:get("deps")) do
-        _package_target_and_deps(project.target(depname)) 
-    end
-
-    -- package target
-    _package(target)
-
-    -- finished
-    _g.finished[target:name()] = true
 end
 
 -- main
 function main()
 
-    -- --archs? deprecated 
+    -- --archs? deprecated
     if option.get("archs") then
 
         -- load config
         config.load()
-            
+
         -- deprecated
         raise("please run \"xmake m package %s\" instead of \"xmake p --archs=%s\"", config.get("plat"), option.get("archs"))
     end
@@ -226,18 +223,17 @@ function main()
     -- build it first
     task.run("build", {target = targetname, all = option.get("all")})
 
-    -- init finished states
-    _g.finished = {}
-
     -- package the given target?
     if targetname then
-        _package_target_and_deps(project.target(targetname))
+        local target = project.target(targetname)
+        _package_targets(target:orderdeps())
+        _package_target(target)
     else
         -- package default or all targets
-        for _, target in pairs(project.targets()) do
+        for _, target in ipairs(project.ordertargets()) do
             local default = target:get("default")
             if default == nil or default == true or option.get("all") then
-                _package_target_and_deps(target)
+                _package_target(target)
             end
         end
     end

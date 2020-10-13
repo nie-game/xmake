@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -30,7 +30,7 @@ local platform      = require("platform/platform")
 
 -- get the option menu for action: xmake config or global
 function menu.options(action)
-    
+
     -- check
     assert(action)
 
@@ -49,9 +49,9 @@ function menu.options(action)
             return nil, errors
         end
 
-        -- get menu
+        -- get menu of the supported platform on the current host
         local menu = instance:menu()
-        if menu then
+        if menu and os.is_host(table.unpack(table.wrap(instance:hosts()))) then
 
             -- get the options for this action
             local options = menu[action]
@@ -60,7 +60,7 @@ function menu.options(action)
                 -- get the language option
                 for _, option in ipairs(options) do
 
-                    -- merge it and remove repeat 
+                    -- merge it and remove repeat
                     local name = option[2]
                     if name then
                         if not exist[name] then
@@ -74,8 +74,6 @@ function menu.options(action)
             end
         end
     end
-
-    -- ok?
     return results
 end
 

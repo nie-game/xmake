@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -38,14 +38,14 @@ rule("wdk.man")
 
         -- get wdk
         local wdk = target:data("wdk")
-        
+
         -- get ctrpp
         local ctrpp = path.join(wdk.bindir, arch, "ctrpp.exe")
         if not os.isexec(ctrpp) then
             ctrpp = path.join(wdk.bindir, wdk.sdkver, arch, "ctrpp.exe")
         end
         assert(os.isexec(ctrpp), "ctrpp not found!")
-        
+
         -- save ctrpp
         target:data_set("wdk.ctrpp", ctrpp)
     end)
@@ -57,6 +57,7 @@ rule("wdk.man")
         import("core.base.option")
         import("core.theme.theme")
         import("core.project.depend")
+        import("private.utils.progress")
 
         -- get ctrpp
         local ctrpp = target:data("wdk.ctrpp")
@@ -111,16 +112,11 @@ rule("wdk.man")
         local dependfile = target:dependfile(headerfile)
         local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
         if not depend.is_changed(dependinfo, {lastmtime = os.mtime(headerfile), values = args}) then
-            return 
+            return
         end
 
         -- trace progress info
-        cprintf("${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} ", opt.progress)
-        if option.get("verbose") then
-            cprint("${dim color.build.object}compiling.wdk.man %s", sourcefile)
-        else
-            cprint("${color.build.object}compiling.wdk.man %s", sourcefile)
-        end
+        progress.show(opt.progress, "${color.build.object}compiling.wdk.man %s", sourcefile)
 
         -- generate header and resource file
         if not os.isdir(outputdir) then

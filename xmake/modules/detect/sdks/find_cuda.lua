@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -29,21 +29,21 @@ import("core.project.config")
 function _find_sdkdir()
 
     -- init the search directories
-    local pathes = {}
+    local paths = {}
     if os.host() == "macosx" then
-        table.insert(pathes, "/Developer/NVIDIA/CUDA/bin")
-        table.insert(pathes, "/Developer/NVIDIA/CUDA*/bin")
+        table.insert(paths, "/Developer/NVIDIA/CUDA/bin")
+        table.insert(paths, "/Developer/NVIDIA/CUDA*/bin")
     elseif os.host() == "windows" then
-        table.insert(pathes, "$(env CUDA_PATH)/bin")
+        table.insert(paths, "$(env CUDA_PATH)/bin")
     else
         -- find from default symbol link dir
-        table.insert(pathes, "/usr/local/cuda/bin")
-        table.insert(pathes, "/usr/local/cuda*/bin")
+        table.insert(paths, "/usr/local/cuda/bin")
+        table.insert(paths, "/usr/local/cuda*/bin")
     end
-    table.insert(pathes, "$(env PATH)")
+    table.insert(paths, "$(env PATH)")
 
     -- attempt to find nvcc
-    local nvcc = find_file(os.host() == "windows" and "nvcc.exe" or "nvcc", pathes)
+    local nvcc = find_file(os.host() == "windows" and "nvcc.exe" or "nvcc", paths)
     if nvcc then
         return path.directory(path.directory(nvcc))
     end
@@ -62,7 +62,7 @@ function _find_cuda(sdkdir)
         return nil
     end
 
-    -- get the bin directory 
+    -- get the bin directory
     local bindir = path.join(sdkdir, "bin")
     if not os.isexec(path.join(bindir, "nvcc")) then
         return nil
@@ -91,14 +91,14 @@ end
 -- find cuda sdk toolchains
 --
 -- @param sdkdir    the cuda sdk directory
--- @param opt       the argument options 
+-- @param opt       the argument options
 --
 -- @return          the cuda sdk toolchains. e.g. {sdkdir = ..., bindir = .., linkdirs = ..., includedirs = ..., .. }
 --
--- @code 
+-- @code
 --
 -- local toolchains = find_cuda("/Developer/NVIDIA/CUDA-9.1")
--- 
+--
 -- @endcode
 --
 function main(sdkdir, opt)
@@ -112,7 +112,7 @@ function main(sdkdir, opt)
     if not opt.force and cacheinfo.cuda and cacheinfo.cuda.sdkdir and os.isdir(cacheinfo.cuda.sdkdir) then
         return cacheinfo.cuda
     end
-       
+
     -- find cuda
     local cuda = _find_cuda(sdkdir or config.get("cuda") or global.get("cuda") or config.get("sdk"))
     if cuda then
@@ -122,13 +122,13 @@ function main(sdkdir, opt)
 
         -- trace
         if opt.verbose or option.get("verbose") then
-            cprint("checking for the Cuda SDK directory ... ${color.success}%s", cuda.sdkdir)
+            cprint("checking for Cuda SDK directory ... ${color.success}%s", cuda.sdkdir)
         end
     else
 
         -- trace
         if opt.verbose or option.get("verbose") then
-            cprint("checking for the Cuda SDK directory ... ${color.nothing}${text.nothing}")
+            cprint("checking for Cuda SDK directory ... ${color.nothing}${text.nothing}")
         end
     end
 

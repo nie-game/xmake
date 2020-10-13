@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -23,7 +23,7 @@ import("lib.detect.find_path")
 import("lib.detect.find_library")
 import("package.manager.find_package")
 
--- find zlib 
+-- find zlib
 --
 -- @param opt   the package options. e.g. see the options of find_package()
 --
@@ -37,16 +37,16 @@ function main(opt)
     --
     if opt.plat == "windows" then
 
-        -- init search pathes
-        local pathes = {"$(reg HKEY_LOCAL_MACHINE\\SOFTWARE\\GnuWin32\\Zlib;InstallPath)",
+        -- init search paths
+        local paths = {"$(reg HKEY_LOCAL_MACHINE\\SOFTWARE\\GnuWin32\\Zlib;InstallPath)",
                         "$(env PROGRAMFILES)/GnuWin32",
                         "$(env PROGRAMFILES)/zlib"}
 
         -- find library
         local result = {links = {}, linkdirs = {}, includedirs = {}}
-        local linkinfo = find_library("zlib", pathes, {suffixes = "lib"})
+        local linkinfo = find_library("zlib", paths, {suffixes = "lib"})
         if not linkinfo then
-            return 
+            return
         end
 
         -- save link and directory
@@ -54,7 +54,7 @@ function main(opt)
         table.insert(result.linkdirs, linkinfo.linkdir)
 
         -- find include
-        local includedir = find_path("zlib.h", pathes, {suffixes = "include"})
+        local includedir = find_path("zlib.h", paths, {suffixes = "include"})
         if includedir then
 
             -- save include directory
@@ -75,7 +75,7 @@ function main(opt)
     -- find it by the builtin script first
     local result = opt.find_package("zlib", opt)
     if not result then
-        -- find it from the link name: z 
+        -- find it from the link name: z
         result = find_package("system::z", opt)
     end
     return result

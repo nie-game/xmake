@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -22,10 +22,10 @@
 import("core.base.option")
 import("core.base.task")
 import("core.project.config")
-import("core.platform.environment")
 import("make.makefile")
 import("make.xmakefile")
 import("cmake.cmakelists")
+import("xcode.xcodeproj")
 import("ninja.build_ninja")
 import("vstudio.vs")
 import("vsxmake.vsxmake")
@@ -36,12 +36,13 @@ function makers()
 
     -- the maps
     return
-    {   
+    {
         make             = makefile.make
     ,   makefile         = makefile.make
     ,   xmakefile        = xmakefile.make
     ,   cmake            = cmakelists.make
     ,   cmakelists       = cmakelists.make
+    ,   xcode            = xcodeproj.make
     ,   ninja            = build_ninja.make
     ,   vs2002           = vs.make(2002)
     ,   vs2003           = vs.make(2003)
@@ -82,14 +83,8 @@ function main()
     -- config it first
     task.run("config")
 
-    -- enter toolchains environment
-    environment.enter("toolchains")
-
     -- make project
     _make(option.get("kind"))
-
-    -- leave toolchains environment
-    environment.leave("toolchains")
 
     -- trace
     cprint("${color.success}create ok!")

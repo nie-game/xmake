@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -28,15 +28,8 @@ import("private.tools.ccache")
 -- init it
 function init(self)
 
-    -- init mxflags
-    self:set("mxflags", "-fmessage-length=0"
-                      , "-pipe"
-                      , "-DIBOutlet=__attribute__((iboutlet))"
-                      , "-DIBOutletCollection(ClassName)=__attribute__((iboutletcollection(ClassName)))"
-                      , "-DIBAction=void)__attribute__((ibaction)")
-
     -- init shflags
-    self:set("shflags", "-shared")
+    self:set("shflags", "-shared", "-rdynamic")
 
     -- init cxflags for the kind: shared
     self:set("shared.cxflags", "-fPIC")
@@ -58,38 +51,28 @@ end
 
 -- make the strip flag
 function nf_strip(self, level)
-
-    -- the maps
-    local maps = 
-    {   
+    local maps =
+    {
         debug = "-S"
     ,   all   = "-s"
     }
-
-    -- make it
     return maps[level]
 end
 
 -- make the symbol flag
 function nf_symbol(self, level)
-
-    -- the maps
-    local maps = 
-    {   
+    local maps =
+    {
         debug  = "-g"
     ,   hidden = "-fvisibility=hidden"
     }
-
-    -- make it
-    return maps[level] 
+    return maps[level]
 end
 
 -- make the warning flag
 function nf_warning(self, level)
-
-    -- the maps
-    local maps = 
-    {   
+    local maps =
+    {
         none       = "-w"
     ,   less       = "-W1"
     ,   more       = "-W3"
@@ -98,8 +81,6 @@ function nf_warning(self, level)
     ,   everything = "-Wall -Wunsupported -Wwrite-strings"
     ,   error      = "-Werror"
     }
-
-    -- make it
     return maps[level]
 end
 
@@ -135,7 +116,13 @@ end
 
 -- make the link arguments list
 function linkargv(self, objectfiles, targetkind, targetfile, flags)
-    return self:program(), table.join("-o", targetfile, objectfiles, flags)
+    local argv
+    if targetkind == "static" then
+        argv = table.join("-ar", "cr", targetfile, objectfiles)
+    else
+        argv = table.join("-o", targetfile, objectfiles, flags)
+    end
+    return self:program(), argv
 end
 
 -- link the target file

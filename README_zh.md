@@ -1,19 +1,19 @@
 <div align="center">
   <a href="https://xmake.io/cn">
-    <img width="200" heigth="200" src="https://tboox.org/static/img/xmake/logo256c.png">
+    <img width="160" heigth="160" src="https://tboox.org/static/img/xmake/logo256c.png">
   </a>  
 
   <h1>xmake</h1>
 
   <div>
-    <a href="https://travis-ci.org/xmake-io/xmake">
-      <img src="https://img.shields.io/travis/xmake-io/xmake/master.svg?style=flat-square" alt="travis-ci" />
+    <a href="https://github.com/xmake-io/xmake/actions?query=workflow%3AWindows">
+      <img src="https://img.shields.io/github/workflow/status/xmake-io/xmake/Windows/dev.svg?style=flat-square&logo=windows" alt="github-ci" />
     </a>
-    <a href="https://ci.appveyor.com/project/waruqi/xmake/branch/master">
-      <img src="https://img.shields.io/appveyor/ci/waruqi/xmake/master.svg?style=flat-square" alt="appveyor-ci" />
+    <a href="https://github.com/xmake-io/xmake/actions?query=workflow%3ALinux">
+      <img src="https://img.shields.io/github/workflow/status/xmake-io/xmake/Linux/dev.svg?style=flat-square&logo=linux" alt="github-ci" />
     </a>
-    <a href="https://aur.archlinux.org/packages/xmake">
-      <img src="https://img.shields.io/aur/votes/xmake.svg?style=flat-square" alt="AUR votes" />
+    <a href="https://github.com/xmake-io/xmake/actions?query=workflow%3AmacOS">
+      <img src="https://img.shields.io/github/workflow/status/xmake-io/xmake/macOS/dev.svg?style=flat-square&logo=apple" alt="github-ci" />
     </a>
     <a href="https://github.com/xmake-io/xmake/releases">
       <img src="https://img.shields.io/github/release/xmake-io/xmake.svg?style=flat-square" alt="Github All Releases" />
@@ -23,17 +23,20 @@
     <a href="https://github.com/xmake-io/xmake/blob/master/LICENSE.md">
       <img src="https://img.shields.io/github/license/xmake-io/xmake.svg?colorB=f48041&style=flat-square" alt="license" />
     </a>
-    <a href="https://www.reddit.com/r/tboox/">
+    <a href="https://www.reddit.com/r/xmake/">
       <img src="https://img.shields.io/badge/chat-on%20reddit-ff3f34.svg?style=flat-square" alt="Reddit" />
     </a>
-    <a href="https://gitter.im/tboox/tboox?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">
-      <img src="https://img.shields.io/gitter/room/tboox/tboox.svg?style=flat-square&colorB=96c312" alt="Gitter" />
+    <a href="https://gitter.im/xmake-io/xmake?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">
+      <img src="https://img.shields.io/gitter/room/xmake-io/xmake.svg?style=flat-square&colorB=96c312" alt="Gitter" />
     </a>
     <a href="https://t.me/tbooxorg">
       <img src="https://img.shields.io/badge/chat-on%20telegram-blue.svg?style=flat-square" alt="Telegram" />
     </a>
     <a href="https://jq.qq.com/?_wv=1027&k=5hpwWFv">
       <img src="https://img.shields.io/badge/chat-on%20QQ-ff69b4.svg?style=flat-square" alt="QQ" />
+    </a>
+    <a href="https://aur.archlinux.org/packages/xmake">
+      <img src="https://img.shields.io/aur/votes/xmake.svg?style=flat-square" alt="AUR votes" />
     </a>
     <a href="https://xmake.io/#/zh-cn/about/sponsor">
       <img src="https://img.shields.io/badge/donate-us-orange.svg?style=flat-square" alt="Donate" />
@@ -43,27 +46,29 @@
   <p>A cross-platform build utility based on Lua</p>
 </div>
 
+## 项目支持
+
+通过成为赞助者来支持该项目。您的logo将显示在此处，并带有指向您网站的链接。🙏 [[成为赞助商](https://xmake.io/#/zh-cn/about/sponsor)]
+
+<a href="https://opencollective.com/xmake#backers" target="_blank"><img src="https://opencollective.com/xmake/backers.svg?width=890"></a>
+
 ## 简介
 
-XMake是一个基于Lua的轻量级跨平台自动构建工具，支持在各种主流平台上构建项目
+xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua 维护项目构建，相比 makefile/CMakeLists.txt，配置语法更加简洁直观，对新手非常友好，短时间内就能快速入门，能够让用户把更多的精力集中在实际的项目开发上。
 
-xmake的目标是开发者更加关注于项目本身开发，简化项目的描述和构建，并且提供平台无关性，使得一次编写，随处构建
+虽然，简单易用是 xmake 的一大特色，但 xmake 的功能也是非常强大的，既能够像 Make/Ninja 那样可以直接编译项目，也可以像 CMake/Meson 那样生成工程文件，还有内置的包管理系统来帮助用户解决 C/C++依赖库的集成使用问题。
 
-它跟cmake、automake、premake有点类似，但是机制不同，它默认不会去生成IDE相关的工程文件，采用直接编译，并且更加的方便易用
-采用lua的工程描述语法更简洁直观，支持在大部分常用平台上进行构建，以及交叉编译
+目前，xmake主要用于C/C++项目的构建，但是同时也支持其他native语言的构建，可以实现跟C/C++进行混合编译，同时编译速度也是非常的快，可以跟Ninja持平。
 
-并且xmake提供了创建、配置、编译、打包、安装、卸载、运行等一些actions，使得开发和构建更加的方便和流程化。
+如果你想要了解更多，请参考：[在线文档](https://xmake.io/#/zh-cn/getting_started), [Github](https://github.com/xmake-io/xmake)以及[Gitee](https://gitee.com/tboox/xmake)
 
-不仅如此，它还提供了许多更加高级的特性，例如插件扩展、脚本宏记录、批量打包、自动文档生成等等。。
+![](https://xmake.io/assets/img/index/xmake-basic-render.gif)
 
-<img src="https://xmake.io/assets/img/index/package_manage.png" width="650px" />
+## 课程
 
-如果你想要了解更多，请参考：
+xmake 官方也推出了一些入门课程，带你一步步快速上手 xmake，课程列表如下：
 
-* [在线文档](https://xmake.io/#/zh-cn/getting_started)
-* [项目主页](https://xmake.io/#/zh-cn/)
-* [Github](https://github.com/xmake-io/xmake)
-* [Gitee](https://gitee.com/tboox/xmake)
+* [Xmake 带你轻松构建 C/C++ 项目](https://xmake.io/#/zh-cn/about/course)
 
 ## 安装
 
@@ -173,8 +178,38 @@ $ xmake f --menu
 * MSYS (i386, x86_64)
 * MinGW (i386, x86_64)
 * Cygwin (i386, x86_64)
-* SDCC (stm8, mcs51, ..)
+* Wasm (wasm32)
 * Cross (cross-toolchains ..)
+
+## 支持工具链
+
+```bash
+$ xmake show -l toolchains
+xcode         Xcode IDE
+vs            VisualStudio IDE
+yasm          The Yasm Modular Assembler
+clang         A C language family frontend for LLVM
+go            Go Programming Language Compiler
+dlang         D Programming Language Compiler
+gfortran      GNU Fortran Programming Language Compiler
+zig           Zig Programming Language Compiler
+sdcc          Small Device C Compiler
+cuda          CUDA Toolkit
+ndk           Android NDK
+rust          Rust Programming Language Compiler
+llvm          A collection of modular and reusable compiler and toolchain technologies
+cross         Common cross compilation toolchain
+nasm          NASM Assembler
+gcc           GNU Compiler Collection
+mingw         Minimalist GNU for Windows
+gnu-rm        GNU Arm Embedded Toolchain
+envs          Environment variables toolchain
+fasm          Flat Assembler
+tinyc         Tiny C Compiler
+emcc          A toolchain for compiling to asm.js and WebAssembly
+icc           Intel C/C++ Compiler
+ifort         Intel Fortran Compiler
+```
 
 ## 支持语言
 
@@ -185,7 +220,9 @@ $ xmake f --menu
 * Golang
 * Rust
 * Dlang
+* Fortran
 * Cuda
+* Zig (Experimental)
 
 ## 工程类型
 
@@ -202,7 +239,7 @@ $ xmake f --menu
 
 ## 更多例子
 
-Debug和Release模式：
+#### Debug 和 Release模式
 
 ```lua
 add_rules("mode.debug", "mode.release")
@@ -215,7 +252,7 @@ target("console")
     end
 ```
 
-自定义脚本:
+#### 自定义脚本
 
 ```lua
 target("test")
@@ -227,18 +264,20 @@ target("test")
     end)
 ```
 
+#### 依赖包自动集成
+
 下载和使用在[xmake-repo](https://github.com/xmake-io/xmake-repo)和第三方包仓库的依赖包：
 
 ```lua
 add_requires("tbox >1.6.1", "libuv master", "vcpkg::ffmpeg", "brew::pcre2/libpcre2-8")
-add_requires("conan::OpenSSL/1.0.2n@conan/stable", {alias = "openssl", optional = true, debug = true}) 
+add_requires("conan::openssl/1.1.1g", {alias = "openssl", optional = true, debug = true}) 
 target("test")
     set_kind("binary")
     add_files("src/*.c")
     add_packages("tbox", "libuv", "vcpkg::ffmpeg", "brew::pcre2/libpcre2-8", "openssl")
 ```
 
-Qt QuickApp应用程序:
+#### Qt QuickApp 应用程序
 
 ```lua
 target("test")
@@ -247,17 +286,17 @@ target("test")
     add_files("src/qml.qrc")
 ```
 
-Cuda程序:
+#### Cuda 程序
 
 ```lua
 target("test")
     set_kind("binary")
     add_files("src/*.cu")
     add_cugencodes("native")
-    add_cugencodes("compute_30")
+    add_cugencodes("compute_35")
 ```
 
-WDK/UMDF驱动程序:
+#### WDK/UMDF 驱动程序
 
 ```lua
 target("echo")
@@ -273,7 +312,7 @@ target("app")
 
 更多WDK驱动程序例子(umdf/kmdf/wdm)，见：[WDK工程例子](https://xmake.io/#/zh-cn/guide/project_examples?id=wdk%e9%a9%b1%e5%8a%a8%e7%a8%8b%e5%ba%8f)
 
-iOS/MacOS应用程序:
+#### iOS/MacOS 应用程序
 
 ```lua
 target("test")
@@ -282,13 +321,24 @@ target("test")
     add_files("src/Info.plist")
 ```
 
-Framework和Bundle程序（iOS/MacOS）:
+#### Framework 和 Bundle 程序（iOS/MacOS）
 
 ```lua
 target("test")
     add_rules("xcode.framework") -- 或者 xcode.bundle
     add_files("src/*.m")
     add_files("src/Info.plist")
+```
+
+#### OpenMP 程序
+
+```lua
+add_requires("libomp", {optional = true})
+target("loop")
+    set_kind("binary")
+    add_files("src/*.cpp")
+    add_rules("c++.openmp")
+    add_packages("libomp")
 ```
 
 ## 插件
@@ -380,6 +430,16 @@ $ ./gradlew app:assembleDebug
 > Task :app:assembleDebug
 ```
 
+## 技术支持
+
+我们也提供付费的技术支持来为帮助用户快速解决相关问题，具体详情请点击下面的图片链接：
+
+<a href="https://xscode.com/waruqi/xmake">
+<img src="https://tboox.org/assets/img/xmake-xscode.png" width="650px" />
+</a>
+
+或者你也可以考虑赞助我们也获取技术支持服务，[[成为赞助商](https://xmake.io/#/zh-cn/about/sponsor)]
+
 ## 项目例子
 
 一些使用xmake的项目：
@@ -389,18 +449,12 @@ $ ./gradlew app:assembleDebug
 * [vm86](https://github.com/tboox/vm86)
 * [更多](https://github.com/xmake-io/awesome-xmake)
 
-## 演示视频
-
-<a href="https://asciinema.org/a/133693">
-<img src="https://asciinema.org/a/133693.png" width="650px" />
-</a>
-
 ## 联系方式
 
 * 邮箱：[waruqi@gmail.com](mailto:waruqi@gmail.com)
-* 主页：[tboox.org](https://tboox.org/cn)
-* 社区：[Reddit论坛](https://www.reddit.com/r/tboox/)
-* 聊天：[Telegram群组](https://t.me/tbooxorg), [Gitter聊天室](https://gitter.im/tboox/tboox?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+* 主页：[xmake.io](https://xmake.io/#/zh-cn/)
+* 社区：[Reddit论坛](https://www.reddit.com/r/xmake/)
+* 聊天：[Telegram群组](https://t.me/tbooxorg), [Gitter聊天室](https://gitter.im/xmake-io/xmake?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 * 源码：[Github](https://github.com/xmake-io/xmake), [Gitee](https://gitee.com/tboox/xmake)
 * QQ群：343118190(技术支持), 662147501
 * 微信公众号：tboox-os
@@ -413,26 +467,4 @@ $ ./gradlew app:assembleDebug
 * [TitanSnow](https://github.com/TitanSnow): 提供xmake [logo](https://github.com/TitanSnow/ts-xmake-logo) 和安装脚本
 * [uael](https://github.com/uael): 提供语义版本跨平台c库 [sv](https://github.com/uael/sv)
 * [OpportunityLiu](https://github.com/OpportunityLiu): 改进cuda构建, tests框架和ci
-
-## 支持项目
-
-xmake项目属于个人开源项目，它的发展需要您的帮助，如果您愿意支持xmake项目的开发，欢迎为其捐赠，支持它的发展。 🙏 [[支持此项目](https://opencollective.com/xmake#backer)]
-
-<a href="https://opencollective.com/xmake#backers" target="_blank"><img src="https://opencollective.com/xmake/backers.svg?width=890"></a>
-
-## 赞助项目
-
-通过赞助支持此项目，您的logo和网站链接将显示在这里。[[赞助此项目](https://opencollective.com/xmake#sponsor)]
-
-<a href="https://opencollective.com/xmake/sponsor/0/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/0/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/1/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/1/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/2/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/2/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/3/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/3/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/4/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/4/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/5/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/5/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/6/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/6/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/7/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/7/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/8/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/8/avatar.svg"></a>
-<a href="https://opencollective.com/xmake/sponsor/9/website" target="_blank"><img src="https://opencollective.com/xmake/sponsor/9/avatar.svg"></a>
-
 

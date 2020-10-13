@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -48,7 +48,7 @@ function sandbox_string.vformat(format, ...)
     if #{...} > 0 then
 
         -- escape "%$", "%(", "%)", "%%" to '$', '(', ')', '%%'
-        format = format:gsub("%%([%$%(%)%%])", function (ch) return utils.ifelse(ch ~= "%", "%%" .. ch, "%%%%") end)
+        format = format:gsub("%%([%$%(%)%%])", function (ch) return ch ~= "%" and ("%%" .. ch) or "%%%%" end)
 
         -- try to format it
         result = string.format(format, ...)

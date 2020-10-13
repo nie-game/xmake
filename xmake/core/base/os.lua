@@ -98,7 +98,7 @@ function os._cp(src, dst, rootdir)
 
     -- not exists?
     else
-        return false, string.format("cannot copy file %s, not found this file", src)
+        return false, string.format("cannot copy file %s, file not found!", src)
     end
 
     -- ok
@@ -125,7 +125,7 @@ function os._mv(src, dst)
         end
     -- not exists?
     else
-        return false, string.format("cannot move %s to %s, not found this file %s", src, dst, os.strerror())
+        return false, string.format("cannot move %s to %s, file %s not found!", src, dst, os.strerror())
     end
 
     -- ok
@@ -189,8 +189,8 @@ end
 function os._is_host(host, ...)
 
     -- no host
-    if not host then 
-        return false 
+    if not host then
+        return false
     end
 
     -- exists this host? and escape '-'
@@ -205,8 +205,8 @@ end
 function os._is_arch(arch, ...)
 
     -- no arch
-    if not arch then 
-        return false 
+    if not arch then
+        return false
     end
 
     -- exists this architecture? and escape '-'
@@ -570,7 +570,7 @@ end
 
 -- generate the temporary file path
 --
--- e.g. 
+-- e.g.
 -- os.tmpfile("key")
 -- os.tmpfile({key = "xxx", ramdisk = false})
 --
@@ -581,7 +581,7 @@ function os.tmpfile(opt_or_key)
         key = opt_or_key.key
         opt = opt_or_key
     end
-    return path.join(os.tmpdir(opt), "_" .. (hash.uuid4(key):gsub("-", "")))                                                        
+    return path.join(os.tmpdir(opt), "_" .. (hash.uuid4(key):gsub("-", "")))
 end
 
 -- exit program
@@ -690,6 +690,10 @@ function os.execv(program, argv, opt)
     if opt.envs then
         local envars = os.getenvs()
         for k, v in pairs(opt.envs) do
+            -- TODO
+            if type(v) == "table" then
+                v = path.joinenv(v)
+            end
             envars[k] = v
         end
         envs = {}
@@ -699,7 +703,7 @@ function os.execv(program, argv, opt)
     end
 
     -- init open options
-    local openopt = {envs = envs, stdout = opt.stdout, stderr = opt.stderr}
+    local openopt = {envs = envs, stdout = opt.stdout, stderr = opt.stderr, curdir = opt.curdir, detach = opt.detach}
 
     -- open command
     local ok = -1

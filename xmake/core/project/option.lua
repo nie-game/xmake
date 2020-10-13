@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -53,7 +53,7 @@ end
 -- save the option info to the cache
 function _instance:_save()
 
-    -- clear scripts for caching to file    
+    -- clear scripts for caching to file
     self:set("check", nil)
     self:set("check_after", nil)
     self:set("check_before", nil)
@@ -123,6 +123,7 @@ function _instance:_do_check()
         self._core_tool_compiler = self._core_tool_compiler or sandbox_module.import("core.tool.compiler", {anonymous = true})
 
         -- all features are supported?
+        features = table.wrap(features)
         local features_supported = self._core_tool_compiler.has_features(features, {target = self})
         if features_supported and #features_supported == #features then
             passed = true
@@ -130,8 +131,8 @@ function _instance:_do_check()
 
         -- trace
         if baseoption.get("verbose") or baseoption.get("diagnosis") then
-            for _, feature in ipairs(table.wrap(features)) do
-                utils.cprint("${dim}checking for the feature(%s) ... %s", feature, passed and "${color.success}${text.success}" or "${color.nothing}${text.nothing}")
+            for _, feature in ipairs(features) do
+                utils.cprint("${dim}checking for feature(%s) ... %s", feature, passed and "${color.success}${text.success}" or "${color.nothing}${text.nothing}")
             end
         end
     end
@@ -157,7 +158,7 @@ function _instance:_on_check()
     end
 end
 
--- check option 
+-- check option
 function _instance:_check()
 
     -- disable this option first
@@ -173,7 +174,7 @@ function _instance:_check()
     end
 
     -- trace
-    utils.cprint("checking for the %s ... %s", name, self:enabled() and "${color.success}${text.success}" or "${color.nothing}${text.nothing}")
+    utils.cprint("checking for %s ... %s", name, self:enabled() and "${color.success}${text.success}" or "${color.nothing}${text.nothing}")
     if not ok then
         os.raise(errors)
     end
@@ -187,7 +188,7 @@ function _instance:_invalidate()
     self._CACHEID = self._CACHEID + 1
 end
 
--- attempt to check option 
+-- attempt to check option
 function _instance:check()
 
     -- the option name
@@ -223,7 +224,7 @@ function _instance:check()
     -- need not check? only save this option to configuration directly
     elseif config.get(name) then
         self:_save()
-    end    
+    end
 
     -- after check
     if check_after then
@@ -242,7 +243,7 @@ function _instance:set_value(value)
     -- set value to option
     config.set(self:name(), value)
 
-    -- save option 
+    -- save option
     self:_save()
 end
 
@@ -252,7 +253,7 @@ function _instance:clear()
     -- clear config
     config.set(self:name(), nil)
 
-    -- clear this option in cache 
+    -- clear this option in cache
     self:_clear()
 end
 
@@ -276,7 +277,7 @@ function _instance:enable(enabled, opt)
         config.set(self:name(), enabled, opt)
     end
 
-    -- save or clear this option in cache 
+    -- save or clear this option in cache
     if self:enabled() then
         self:_save()
     else
@@ -345,7 +346,7 @@ function _instance:name()
     return self._NAME
 end
 
--- get the cache key 
+-- get the cache key
 function _instance:cachekey()
     return string.format("%s_%d", tostring(self), self._CACHEID)
 end
@@ -388,7 +389,7 @@ end
 -- get option apis
 function option.apis()
 
-    return 
+    return
     {
         values =
         {
@@ -443,9 +444,9 @@ function option.interpreter()
 
     -- register filter handler
     interp:filter():register("option", function (variable)
- 
+
         -- init maps
-        local maps = 
+        local maps =
         {
             arch       = function() return config.get("arch") or os.arch() end
         ,   plat       = function() return config.get("plat") or os.host() end
@@ -488,7 +489,7 @@ function option.load(name)
     -- get info
     local info = option._cache():get(name)
     if info == nil then
-        return 
+        return
     end
     return option.new(name, scopeinfo.new("option", info))
 end

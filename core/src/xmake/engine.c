@@ -11,7 +11,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * Copyright (C) 2015-2020, TBOOX Open Source Group.
  *
  * @author      ruki
@@ -66,7 +66,7 @@
 // the engine type
 typedef struct __xm_engine_t
 {
-    // the lua 
+    // the lua
     lua_State*              lua;
 
     // the engine name
@@ -221,15 +221,22 @@ tb_int_t xm_semver_select(lua_State* lua);
 
 #ifdef XM_CONFIG_API_HAVE_CURSES
 // register curses
+__tb_extern_c_enter__
 tb_int_t xm_curses_register(lua_State* lua);
+__tb_extern_c_leave__
 #endif
+
+// open cjson
+__tb_extern_c_enter__
+tb_int_t luaopen_cjson(lua_State *l);
+__tb_extern_c_leave__
 
 /* //////////////////////////////////////////////////////////////////////////////////////
  * globals
  */
 
 // the os functions
-static luaL_Reg const g_os_functions[] = 
+static luaL_Reg const g_os_functions[] =
 {
     { "argv",           xm_os_argv      }
 ,   { "args",           xm_os_args      }
@@ -271,7 +278,7 @@ static luaL_Reg const g_os_functions[] =
 
 // the windows functions
 #ifdef TB_CONFIG_OS_WINDOWS
-static luaL_Reg const g_winos_functions[] = 
+static luaL_Reg const g_winos_functions[] =
 {
     { "cp_info",             xm_winos_cp_info           }
 ,   { "console_cp",          xm_winos_console_cp        }
@@ -285,7 +292,7 @@ static luaL_Reg const g_winos_functions[] =
 #endif
 
 // the io functions
-static luaL_Reg const g_io_functions[] = 
+static luaL_Reg const g_io_functions[] =
 {
     { "stdfile",            xm_io_stdfile          }
 ,   { "file_open",          xm_io_file_open        }
@@ -332,7 +339,7 @@ static luaL_Reg const g_io_functions[] =
 };
 
 // the path functions
-static luaL_Reg const g_path_functions[] = 
+static luaL_Reg const g_path_functions[] =
 {
     { "relative",       xm_path_relative    }
 ,   { "absolute",       xm_path_absolute    }
@@ -342,7 +349,7 @@ static luaL_Reg const g_path_functions[] =
 };
 
 // the hash functions
-static luaL_Reg const g_hash_functions[] = 
+static luaL_Reg const g_hash_functions[] =
 {
     { "uuid4",          xm_hash_uuid4  }
 ,   { "sha256",         xm_hash_sha256 }
@@ -350,7 +357,7 @@ static luaL_Reg const g_hash_functions[] =
 };
 
 // the string functions
-static luaL_Reg const g_string_functions[] = 
+static luaL_Reg const g_string_functions[] =
 {
     { "trim",           xm_string_trim          }
 ,   { "split",          xm_string_split         }
@@ -362,7 +369,7 @@ static luaL_Reg const g_string_functions[] =
 };
 
 // the process functions
-static luaL_Reg const g_process_functions[] = 
+static luaL_Reg const g_process_functions[] =
 {
     { "open",           xm_process_open     }
 ,   { "openv",          xm_process_openv    }
@@ -373,7 +380,7 @@ static luaL_Reg const g_process_functions[] =
 };
 
 // the sandbox functions
-static luaL_Reg const g_sandbox_functions[] = 
+static luaL_Reg const g_sandbox_functions[] =
 {
     { "interactive",    xm_sandbox_interactive }
 ,   { tb_null,          tb_null                }
@@ -476,11 +483,11 @@ static tb_size_t xm_engine_get_program_file(xm_engine_t* engine, tb_char_t* path
         /*
          * _NSGetExecutablePath() copies the path of the main executable into the buffer. The bufsize parameter
          * should initially be the size of the buffer.  The function returns 0 if the path was successfully copied,
-         * and *bufsize is left unchanged. It returns -1 if the buffer is not large enough, and *bufsize is set 
-         * to the size required. 
-         * 
-         * Note that _NSGetExecutablePath will return "a path" to the executable not a "real path" to the executable. 
-         * That is the path may be a symbolic link and not the real file. With deep directories the total bufsize 
+         * and *bufsize is left unchanged. It returns -1 if the buffer is not large enough, and *bufsize is set
+         * to the size required.
+         *
+         * Note that _NSGetExecutablePath will return "a path" to the executable not a "real path" to the executable.
+         * That is the path may be a symbolic link and not the real file. With deep directories the total bufsize
          * needed could be more than MAXPATHLEN.
          */
         tb_uint32_t bufsize = (tb_uint32_t)maxn;
@@ -772,7 +779,7 @@ static tb_void_t xm_engine_init_features(xm_engine_t* engine)
     lua_pushstring(engine->lua, "/");
 #endif
     lua_settable(engine->lua, -3);
-    
+
     // get environment path seperator
     lua_pushstring(engine->lua, "path_envsep");
 #if defined(TB_CONFIG_OS_WINDOWS) && !defined(TB_COMPILER_LIKE_UNIX)
@@ -802,7 +809,7 @@ xm_engine_ref_t xm_engine_init(tb_char_t const* name, xm_engine_lni_initalizer_c
         // init name
         tb_strlcpy(engine->name, name, sizeof(engine->name));
 
-        // init lua 
+        // init lua
         engine->lua = lua_open();
         tb_assert_and_check_break(engine->lua);
 
@@ -830,7 +837,7 @@ xm_engine_ref_t xm_engine_init(tb_char_t const* name, xm_engine_lni_initalizer_c
         // bind sandbox functions
         luaL_register(engine->lua, "sandbox", g_sandbox_functions);
 
-        // bind windows functions 
+        // bind windows functions
 #ifdef TB_CONFIG_OS_WINDOWS
         luaL_register(engine->lua, "winos", g_winos_functions);
 #endif
@@ -844,10 +851,14 @@ xm_engine_ref_t xm_engine_init(tb_char_t const* name, xm_engine_lni_initalizer_c
         luaL_register(engine->lua, "semver", g_semver_functions);
 
 #ifdef XM_CONFIG_API_HAVE_CURSES
-        // bind curses 
+        // bind curses
         xm_curses_register(engine->lua);
         lua_setglobal(engine->lua, "curses");
 #endif
+
+        // bind cjson
+        luaopen_cjson(engine->lua);
+        lua_setglobal(engine->lua, "cjson");
 
         // init host
         xm_engine_init_host(engine);
@@ -988,7 +999,7 @@ tb_int_t xm_engine_main(xm_engine_ref_t self, tb_int_t argc, tb_char_t** argv, t
 
     // call the main function
     lua_getglobal(engine->lua, "_xmake_main");
-    if (lua_pcall(engine->lua, 0, 1, -2)) 
+    if (lua_pcall(engine->lua, 0, 1, -2))
     {
         // error
         tb_printf("error: %s\n", lua_tostring(engine->lua, -1));

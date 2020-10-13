@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -38,19 +38,19 @@ function _get_configs(package, configs)
     end
     table.insert(configs, "--mode=" .. (package:debug() and "debug" or "release"))
     if cflags then
-        table.insert(configs, "--cflags=" .. os.args(table.concat(cflags, ' ')))
+        table.insert(configs, "--cflags=" .. table.concat(cflags, ' '))
     end
     if cxflags then
-        table.insert(configs, "--cxflags=" .. os.args(table.concat(cxflags, ' ')))
+        table.insert(configs, "--cxflags=" .. table.concat(cxflags, ' '))
     end
     if cxxflags then
-        table.insert(configs, "--cxxflags=" .. os.args(table.concat(cxxflags, ' ')))
+        table.insert(configs, "--cxxflags=" .. table.concat(cxxflags, ' '))
     end
     if asflags then
-        table.insert(configs, "--asflags=" .. os.args(table.concat(asflags, ' ')))
+        table.insert(configs, "--asflags=" .. table.concat(asflags, ' '))
     end
     if ldflags then
-        table.insert(configs, "--ldflags=" .. os.args(table.concat(ldflags, ' ')))
+        table.insert(configs, "--ldflags=" .. table.concat(ldflags, ' '))
     end
     return configs
 end
@@ -59,7 +59,7 @@ end
 function _init_argv(...)
     local argv = {...}
     for _, name in ipairs({"diagnosis", "verbose", "quiet", "yes", "confirm", "root"}) do
-        local value = option.get(name) 
+        local value = option.get(name)
         if type(value) == "boolean" then
             table.insert(argv, "--" .. name)
         elseif value ~= nil then

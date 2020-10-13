@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -33,7 +33,7 @@ function sandbox_core_base_global.get(name)
     return global.get(name)
 end
 
--- set the configure 
+-- set the configure
 --
 -- @param name  the name
 -- @param value the value
@@ -66,31 +66,6 @@ end
 -- clear the configure
 function sandbox_core_base_global.clear()
     return global.clear()
-end
-
--- check the configure
-function sandbox_core_base_global.check()
-
-    -- check all platforms with the current host
-    for _, plat in ipairs(table.wrap(platform.plats())) do
-
-        -- load platform 
-        local instance, errors = platform.load(plat)
-        if not instance then
-            raise(errors)
-        end
-
-        -- belong to the current host?
-        for _, host in ipairs(table.wrap(instance:hosts())) do
-            if host == os.host() then
-                local on_check = instance:script("global_check")
-                if on_check then
-                    on_check(instance)
-                end
-                break
-            end
-        end
-    end
 end
 
 -- get all options

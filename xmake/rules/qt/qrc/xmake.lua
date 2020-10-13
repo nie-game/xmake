@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -29,11 +29,11 @@ rule("qt.qrc")
 
     -- before load
     before_load(function (target)
-        
+
         -- get rcc
         local rcc = path.join(target:data("qt").bindir, is_host("windows") and "rcc.exe" or "rcc")
         assert(rcc and os.isexec(rcc), "rcc not found!")
-        
+
         -- save rcc
         target:data_set("qt.rcc", rcc)
     end)
@@ -47,6 +47,7 @@ rule("qt.qrc")
         import("core.project.config")
         import("core.project.depend")
         import("core.tool.compiler")
+        import("private.utils.progress")
 
         -- get rcc
         local rcc = target:data("qt.rcc")
@@ -58,7 +59,7 @@ rule("qt.qrc")
         -- get object file
         local objectfile = target:objectfile(sourcefile_cpp)
 
-        -- load compiler 
+        -- load compiler
         local compinst = compiler.load("cxx", {target = target})
 
         -- get compile flags
@@ -67,30 +68,25 @@ rule("qt.qrc")
         -- add objectfile
         table.insert(target:objectfiles(), objectfile)
 
-        -- load dependent info 
+        -- load dependent info
         local dependfile = target:dependfile(objectfile)
         local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
 
         -- need build this object?
         local depvalues = {compinst:program(), compflags}
         if not depend.is_changed(dependinfo, {lastmtime = os.mtime(objectfile), values = depvalues}) then
-            return 
+            return
         end
 
         -- trace progress info
-        cprintf("${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} ", opt.progress)
-        if option.get("verbose") then
-            cprint("${dim color.build.object}compiling.qt.qrc %s", sourcefile_qrc)
-        else
-            cprint("${color.build.object}compiling.qt.qrc %s", sourcefile_qrc)
-        end
+        progress.show(opt.progress, "${color.build.object}compiling.qt.qrc %s", sourcefile_qrc)
 
         -- ensure the source file directory
         if not os.isdir(sourcefile_dir) then
             os.mkdir(sourcefile_dir)
         end
 
-        -- compile qrc 
+        -- compile qrc
         os.vrunv(rcc, {"-name", path.basename(sourcefile_qrc), sourcefile_qrc, "-o", sourcefile_cpp})
 
         -- trace

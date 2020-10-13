@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -24,13 +24,14 @@ rule("xcode.storyboard")
     -- support add_files("*.storyboard")
     set_extensions(".storyboard")
 
-    -- build *.storyboard 
+    -- build *.storyboard
     on_build_file(function (target, sourcefile, opt)
 
         -- imports
         import("core.base.option")
         import("core.theme.theme")
         import("core.project.depend")
+        import("private.utils.progress")
 
         -- get xcode sdk directory
         local xcode_sdkdir = assert(get_config("xcode"), "xcode not found!")
@@ -46,26 +47,24 @@ rule("xcode.storyboard")
         local dependfile = target:dependfile(sourcefile)
         local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
         if not depend.is_changed(dependinfo, {lastmtime = os.mtime(dependfile)}) then
-            return 
+            return
         end
-        
+
         -- trace progress info
-        cprintf("${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} ", opt.progress)
-        if option.get("verbose") then
-            cprint("${dim color.build.object}compiling.xcode.$(mode) %s", sourcefile)
-        else
-            cprint("${color.build.object}compiling.xcode.$(mode) %s", sourcefile)
-        end
+        progress.show(opt.progress, "${color.build.object}compiling.xcode.$(mode) %s", sourcefile)
 
         -- clear Base.lproj first
         os.tryrm(base_lproj)
 
         -- do compile
+        local target_minver
         local argv = {"--errors", "--warnings", "--notices", "--auto-activate-custom-fonts", "--output-format", "human-readable-text"}
         if is_plat("macosx") then
+            target_minver = get_config("target_minver_macosx")
             table.insert(argv, "--target-device")
             table.insert(argv, "mac")
         elseif is_plat("iphoneos") then
+            target_minver = get_config("target_minver_iphoneos")
             table.insert(argv, "--target-device")
             table.insert(argv, "iphone")
             table.insert(argv, "--target-device")
@@ -73,8 +72,10 @@ rule("xcode.storyboard")
         else
             assert("unknown device!")
         end
-        table.insert(argv, "--minimum-deployment-target")
-        table.insert(argv, get_config("target_minver"))
+        if target_minver then
+            table.insert(argv, "--minimum-deployment-target")
+            table.insert(argv, target_minver)
+        end
         table.insert(argv, "--compilation-directory")
         table.insert(argv, base_lproj)
         table.insert(argv, sourcefile)
@@ -86,8 +87,10 @@ rule("xcode.storyboard")
             table.insert(argv, "--target-device")
             table.insert(argv, "mac")
         end
-        table.insert(argv, "--minimum-deployment-target")
-        table.insert(argv, get_config("target_minver"))
+        if target_minver then
+            table.insert(argv, "--minimum-deployment-target")
+            table.insert(argv, target_minver)
+        end
         table.insert(argv, "--link")
         table.insert(argv, resourcesdir)
         table.insert(argv, path.join(base_lproj, path.filename(sourcefile) .. "c"))

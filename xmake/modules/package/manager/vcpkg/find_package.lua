@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -35,13 +35,17 @@ function main(name, opt)
     -- attempt to find the vcpkg root directory
     local vcpkgdir = find_vcpkgdir(opt.vcpkgdir)
     if not vcpkgdir then
-        return 
+        return
     end
 
+    -- fix name, e.g. ffmpeg[x264] as ffmpeg
+    -- @see https://github.com/xmake-io/xmake/issues/925
+    name = name:gsub("%[.-%]", "")
+
     -- get arch, plat and mode
-    local arch = opt.arch 
-    local plat = opt.plat 
-    local mode = opt.mode 
+    local arch = opt.arch
+    local plat = opt.plat
+    local mode = opt.mode
     if plat == "macosx" then
         plat = "osx"
     end
@@ -84,8 +88,10 @@ function main(name, opt)
                     result = result or {}
                     result.links = result.links or {}
                     result.linkdirs = result.linkdirs or {}
+                    result.libfiles = result.libfiles or {}
                     table.insert(result.linkdirs, path.join(installdir, path.directory(line)))
                     table.insert(result.links, target.linkname(path.filename(line)))
+                    table.insert(result.libfiles, path.join(installdir, path.directory(line), path.filename(line)))
                 end
             end
 
@@ -94,7 +100,9 @@ function main(name, opt)
                 if line:find(plat .. (mode == "debug" and "/debug" or "") .. "/bin/", 1, true) then
                     result = result or {}
                     result.linkdirs = result.linkdirs or {}
+                    result.libfiles = result.libfiles or {}
                     table.insert(result.linkdirs, path.join(installdir, path.directory(line)))
+                    table.insert(result.libfiles, path.join(installdir, path.directory(line), path.filename(line)))
                 end
             end
         end

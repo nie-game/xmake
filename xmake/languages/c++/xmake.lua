@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -22,10 +22,10 @@
 language("c++")
 
     -- set source file kinds
-    set_sourcekinds {cc = ".c", cxx = {".cpp", ".cc", ".cxx"}}   
+    set_sourcekinds {cc = ".c", cxx = {".cpp", ".cc", ".cxx"}}
 
     -- set source file flags
-    set_sourceflags {cc = {"cflags", "cxflags"}, cxx = {"cxxflags", "cxflags"}}   
+    set_sourceflags {cc = {"cflags", "cxflags"}, cxx = {"cxxflags", "cxflags"}}
 
     -- set target kinds
     set_targetkinds {binary = "ld", static = "ar", shared = "sh"}
@@ -49,7 +49,7 @@ language("c++")
     on_check_main("check_main")
 
     -- set name flags
-    set_nameflags 
+    set_nameflags
     {
         object =
         {
@@ -58,6 +58,7 @@ language("c++")
         ,   "config.frameworks"
         ,   "target.symbols"
         ,   "target.warnings"
+        ,   "target.fpmodels"
         ,   "target.optimize:check"
         ,   "target.vectorexts:check"
         ,   "target.languages"
@@ -70,6 +71,7 @@ language("c++")
         ,   "target.pcxxheader"
         ,   "option.symbols"
         ,   "option.warnings"
+        ,   "option.fpmodels"
         ,   "option.optimize:check"
         ,   "option.vectorexts:check"
         ,   "option.languages"
@@ -80,11 +82,11 @@ language("c++")
         ,   "option.undefines_if_ok"
         ,   "option.frameworkdirs"
         ,   "option.frameworks"
-        ,   "platform.includedirs"
-        ,   "platform.defines"
-        ,   "platform.undefines"
-        ,   "platform.frameworkdirs"
-        ,   "platform.frameworks"
+        ,   "toolchain.includedirs"
+        ,   "toolchain.defines"
+        ,   "toolchain.undefines"
+        ,   "toolchain.frameworkdirs"
+        ,   "toolchain.frameworks"
         }
     ,   binary =
         {
@@ -100,21 +102,21 @@ language("c++")
         ,   "option.linkdirs"
         ,   "option.rpathdirs"
         ,   "option.frameworkdirs"
-        ,   "platform.linkdirs"
-        ,   "platform.rpathdirs"
-        ,   "platform.frameworkdirs"
+        ,   "toolchain.linkdirs"
+        ,   "toolchain.rpathdirs"
+        ,   "toolchain.frameworkdirs"
         ,   "config.links"
         ,   "target.links"
         ,   "option.links"
-        ,   "platform.links"
+        ,   "toolchain.links"
         ,   "config.frameworks"
         ,   "target.frameworks"
         ,   "option.frameworks"
-        ,   "platform.frameworks"
+        ,   "toolchain.frameworks"
         ,   "config.syslinks"
         ,   "target.syslinks"
         ,   "option.syslinks"
-        ,   "platform.syslinks"
+        ,   "toolchain.syslinks"
         }
     ,   shared =
         {
@@ -130,23 +132,23 @@ language("c++")
         ,   "option.linkdirs"
         ,   "option.rpathdirs"
         ,   "option.frameworkdirs"
-        ,   "platform.linkdirs"
-        ,   "platform.rpathdirs"
-        ,   "platform.frameworkdirs"
+        ,   "toolchain.linkdirs"
+        ,   "toolchain.rpathdirs"
+        ,   "toolchain.frameworkdirs"
         ,   "config.links"
         ,   "target.links"
         ,   "option.links"
-        ,   "platform.links"
+        ,   "toolchain.links"
         ,   "config.frameworks"
         ,   "target.frameworks"
         ,   "option.frameworks"
-        ,   "platform.frameworks"
+        ,   "toolchain.frameworks"
         ,   "config.syslinks"
         ,   "target.syslinks"
         ,   "option.syslinks"
-        ,   "platform.syslinks"
+        ,   "toolchain.syslinks"
         }
-    ,   static = 
+    ,   static =
         {
             "target.strip"
         ,   "target.symbols"
@@ -155,8 +157,8 @@ language("c++")
 
     -- set menu
     set_menu {
-                config = 
-                {   
+                config =
+                {
                     {category = "Cross Complation Configuration/Compiler Configuration"                             }
                 ,   {nil, "cc",            "kv", nil,          "The C Compiler"                                     }
                 ,   {nil, "cxx",           "kv", nil,          "The C++ Compiler"                                   }

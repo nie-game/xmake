@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -33,7 +33,7 @@ function main()
     local targetname = option.get("target")
 
     -- config it first
-    task.run("config", {target = targetname, require = "n"})
+    task.run("config", {target = targetname, require = "n", verbose = false})
 
     -- attempt to uninstall directly
     try
@@ -78,19 +78,14 @@ function main()
 
                 -- continue to uninstall with administrator permission?
                 local ok = false
-                if sudo.has() then
+                if sudo.has() and option.get("admin") then
 
-                    -- confirm to uninstall?
-                    local confirm = utils.confirm({default = true, description = "try continue to uninstall with administrator permission again"})
-                    if confirm then
+                    -- uninstall target with administrator permission
+                    sudo.runl(path.join(os.scriptdir(), "uninstall_admin.lua"), {targetname or "__all", option.get("installdir"), option.get("prefix")})
 
-                        -- uninstall target with administrator permission
-                        sudo.runl(path.join(os.scriptdir(), "uninstall_admin.lua"), {targetname or "__all", option.get("installdir"), option.get("prefix")})
-
-                        -- trace
-                        cprint("${color.success}uninstall ok!")
-                        ok = true
-                    end
+                    -- trace
+                    cprint("${color.success}uninstall ok!")
+                    ok = true
                 end
                 assert(ok, "uninstall failed, %s", errors or "unknown reason")
             end

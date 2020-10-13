@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -85,7 +85,7 @@ function _api_add_cfunc(interp, module, alias, links, includes, func)
     -- restore the current scope
     interp:scope_restore(scope)
 
-    -- add this option 
+    -- add this option
     interp:api_call("add_options", name)
 end
 
@@ -139,7 +139,7 @@ function _api_add_cxxfunc(interp, module, alias, links, includes, func)
     -- restore the current scope
     interp:scope_restore(scope)
 
-    -- add this option 
+    -- add this option
     interp:api_call("add_options", name)
 end
 
@@ -157,7 +157,7 @@ end
 function apis()
 
     -- init apis
-    _g.values = 
+    _g.values =
     {
         -- target.set_xxx
         "target.set_config_h_prefix" -- deprecated
@@ -215,10 +215,26 @@ function apis()
     ,   "package.add_frameworks"
     ,   "package.add_rpathdirs"
     ,   "package.add_linkdirs"
-    ,   "package.add_includedirs" --@note we need not uses pathes for package, see https://github.com/xmake-io/xmake/issues/717
+    ,   "package.add_includedirs" --@note we need not uses paths for package, see https://github.com/xmake-io/xmake/issues/717
     ,   "package.add_frameworkdirs"
+        -- toolchain.add_xxx
+    ,   "toolchain.add_links"
+    ,   "toolchain.add_syslinks"
+    ,   "toolchain.add_cflags"
+    ,   "toolchain.add_cxflags"
+    ,   "toolchain.add_cxxflags"
+    ,   "toolchain.add_ldflags"
+    ,   "toolchain.add_arflags"
+    ,   "toolchain.add_shflags"
+    ,   "toolchain.add_defines"
+    ,   "toolchain.add_undefines"
+    ,   "toolchain.add_frameworks"
+    ,   "toolchain.add_rpathdirs"
+    ,   "toolchain.add_linkdirs"
+    ,   "toolchain.add_includedirs"
+    ,   "toolchain.add_frameworkdirs"
     }
-    _g.pathes = 
+    _g.paths =
     {
         -- target.set_xxx
         "target.set_headerdir"        -- TODO deprecated
@@ -246,7 +262,7 @@ function apis()
     ,   "option.add_cxxsnippet"  -- TODO deprecated
     ,   "option.add_cxxsnippets"
     }
-    _g.custom = 
+    _g.custom =
     {
         -- target.add_xxx
         {"target.add_cfunc",        _api_add_cfunc      }

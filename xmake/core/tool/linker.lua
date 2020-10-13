@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -36,28 +36,35 @@ local tool      = require("tool/tool")
 local builder   = require("tool/builder")
 local compiler  = require("tool/compiler")
 
--- add flags from the platform 
-function linker:_add_flags_from_platform(flags, targetkind)
+-- add flags from the toolchains
+function linker:_add_flags_from_toolchains(flags, targetkind, target)
 
-    -- attempt to add special lanugage flags first for target kind, e.g. binary.go.gc-ldflags, static.dc-arflags
+    -- attempt to add special lanugage flags first for target kind, e.g. binary.go.gcldflags, static.dcarflags
     if targetkind then
         local toolkind = self:kind()
         local toolname = self:name()
-        for _, flagkind in ipairs(self:_flagkinds()) do
-            local toolflags = platform.get(targetkind .. '.' .. toolname .. '.' .. toolkind .. 'flags') or platform.get(targetkind .. '.' .. toolname .. '.' .. flagkind)
-            table.join2(flags, toolflags or platform.get(targetkind .. '.' .. toolkind .. 'flags') or platform.get(targetkind .. '.' .. flagkind))
+        if target and target:type() == "target" then
+            for _, flagkind in ipairs(self:_flagkinds()) do
+                local toolflags = target:toolconfig(targetkind .. '.' .. toolname .. '.' .. toolkind .. 'flags') or target:toolconfig(targetkind .. '.' .. toolname .. '.' .. flagkind)
+                table.join2(flags, toolflags or target:toolconfig(targetkind .. '.' .. toolkind .. 'flags') or target:toolconfig(targetkind .. '.' .. flagkind))
+            end
+        else
+            for _, flagkind in ipairs(self:_flagkinds()) do
+                local toolflags = platform.toolconfig(targetkind .. '.' .. toolname .. '.' .. toolkind .. 'flags') or platform.toolconfig(targetkind .. '.' .. toolname .. '.' .. flagkind)
+                table.join2(flags, toolflags or platform.toolconfig(targetkind .. '.' .. toolkind .. 'flags') or platform.toolconfig(targetkind .. '.' .. flagkind))
+            end
         end
     end
 end
 
--- add flags from the linker 
+-- add flags from the linker
 function linker:_add_flags_from_linker(flags)
 
     -- add flags
     local toolkind = self:kind()
     for _, flagkind in ipairs(self:_flagkinds()) do
 
-        -- attempt to add special lanugage flags first, e.g. gc-ldflags, dc-arflags
+        -- attempt to add special lanugage flags first, e.g. gcldflags, dcarflags
         table.join2(flags, self:get(toolkind .. 'flags') or self:get(flagkind))
     end
 end
@@ -78,20 +85,14 @@ function linker._load_tool(targetkind, sourcekinds, target)
     for _, _linkerinfo in ipairs(linkerinfos) do
 
         -- get program from target
-        local program = nil
-        if target then
-            program = target:get("toolchain." .. _linkerinfo.linkerkind)
-            if not program then
-                local tools = target:get("tools") -- TODO: deprecated
-                if tools then
-                    program = tools[_linkerinfo.linkerkind]
-                end
-            end
+        local program, toolname, toolchain_info
+        if target and target:type() == "target" then
+            program, toolname, toolchain_info = target:tool(_linkerinfo.linkerkind)
         end
 
         -- load the linker tool from the linker kind (with cache)
-        linkertool, errors = tool.load(_linkerinfo.linkerkind, program)
-        if linkertool then 
+        linkertool, errors = tool.load(_linkerinfo.linkerkind, {program = program, toolname = toolname, toolchain_info = toolchain_info})
+        if linkertool then
             linkerinfo = _linkerinfo
             linkerinfo.program = program
             break
@@ -148,15 +149,15 @@ function linker.load(targetkind, sourcekinds, target)
 
     -- save linker tool
     instance._TOOL = linkertool
- 
-    -- load the name flags of archiver 
+
+    -- load the name flags of archiver
     local nameflags = {}
     local nameflags_exists = {}
     for _, sourcekind in ipairs(sourcekinds) do
 
-        -- load language 
+        -- load language
         local result, errors = language.load_sk(sourcekind)
-        if not result then 
+        if not result then
             return nil, errors
         end
 
@@ -180,17 +181,21 @@ function linker.load(targetkind, sourcekinds, target)
     -- save this instance
     builder._INSTANCES[cachekey] = instance
 
-    -- add platform flags to the linker tool
+    -- add toolchains flags to the linker tool
+    -- add special lanugage flags first, e.g. go.gcldflags or gcc.ldflags or gcldflags or ldflags
     local toolkind = linkertool:kind()
     local toolname = linkertool:name()
-    for _, flagkind in ipairs(instance:_flagkinds()) do
-
-        -- add special lanugage flags first, e.g. go.gc-ldflags or gcc.ldflags or gc-ldflags or ldflags
-        linkertool:add(toolkind .. 'flags', platform.get(toolname .. '.' .. toolkind .. 'flags') or platform.get(toolkind .. 'flags'))
-        linkertool:add(flagkind, platform.get(toolname .. '.' .. flagkind) or platform.get(flagkind))
+    if target and target:type() == "target" then
+        for _, flagkind in ipairs(instance:_flagkinds()) do
+            linkertool:add(toolkind .. 'flags', target:toolconfig(toolname .. '.' .. toolkind .. 'flags') or target:toolconfig(toolkind .. 'flags'))
+            linkertool:add(flagkind, target:toolconfig(toolname .. '.' .. flagkind) or target:toolconfig(flagkind))
+        end
+    else
+        for _, flagkind in ipairs(instance:_flagkinds()) do
+            linkertool:add(toolkind .. 'flags', platform.toolconfig(toolname .. '.' .. toolkind .. 'flags') or platform.toolconfig(toolkind .. 'flags'))
+            linkertool:add(flagkind, platform.toolconfig(toolname .. '.' .. flagkind) or platform.toolconfig(flagkind))
+        end
     end
-
-    -- ok
     return instance
 end
 
@@ -212,7 +217,7 @@ end
 
 -- get the link flags
 --
--- @param opt   the argument options (contain all the linker attributes of target), 
+-- @param opt   the argument options (contain all the linker attributes of target),
 --              e.g. {target = ..., targetkind = "static", configs = {ldflags = "", links = "", linkdirs = "", ...}}
 --
 function linker:linkflags(opt)
@@ -229,24 +234,28 @@ function linker:linkflags(opt)
         targetkind = target:targetkind()
     end
 
-    -- add flags from the configure 
+    -- add flags from linker/toolchains
+    --
+    -- we need to add toolchain flags at the beginning to allow users to override them.
+    -- but includedirs/links/syslinks/linkdirs will still be placed last, they are in the order defined in languages/xmake.lua
+    --
+    -- @see https://github.com/xmake-io/xmake/issues/978
+    --
     local flags = {}
+    self:_add_flags_from_linker(flags)
+    self:_add_flags_from_toolchains(flags, targetkind, target)
+
+    -- add flags from user configuration
     self:_add_flags_from_config(flags)
 
-    -- add flags for the target
+    -- add flags from target
     self:_add_flags_from_target(flags, target)
 
-    -- add flags for the argument
+    -- add flags from argument
     local configs = opt.configs or opt.config
     if configs then
         self:_add_flags_from_argument(flags, target, configs)
     end
-
-    -- add flags from the platform 
-    self:_add_flags_from_platform(flags, targetkind)
-
-    -- add flags from the linker 
-    self:_add_flags_from_linker(flags)
 
     -- preprocess flags
     return self:_preprocess_flags(flags)

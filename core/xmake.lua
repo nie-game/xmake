@@ -2,7 +2,7 @@
 set_project("xmake")
 
 -- version
-set_version("2.3.3", {build = "%Y%m%d%H%M"})
+set_version("2.3.7", {build = "%Y%m%d%H%M"})
 
 -- set xmake min version
 set_xmakever("2.2.3")
@@ -15,6 +15,12 @@ set_languages("c99", "cxx11")
 
 -- add release and debug modes
 add_rules("mode.release", "mode.debug")
+if is_mode("release") then
+    set_optimize("smallest")
+    if is_plat("windows") then
+        add_ldflags("/LTCG")
+    end
+end
 
 -- disable some compiler errors
 add_cxflags("-Wno-error=deprecated-declarations", "-fno-strict-aliasing", "-Wno-error=nullability-completeness", "-Wno-error=parentheses-equality")
@@ -50,7 +56,6 @@ option("curses")
     set_description("Enable or disable curses library")
     add_links("curses")
     add_cincludes("curses.h")
-    add_defines("XM_CONFIG_API_HAVE_CURSES")
 option_end()
 
 -- the pdcurses option
@@ -59,7 +64,6 @@ option("pdcurses")
     set_showmenu(true)
     set_description("Enable or disable pdcurses library")
     add_defines("PDCURSES")
-    add_defines("XM_CONFIG_API_HAVE_CURSES")
 option_end()
 
 -- only build xmake libraries for development?
@@ -76,7 +80,7 @@ if is_plat("windows") then
 end
 
 -- add projects
-includes("src/lcurses", "src/sv","src/luajit", "src/tbox", "src/xmake", "src/demo")
+includes("src/lua-cjson", "src/lcurses", "src/sv","src/luajit", "src/tbox", "src/xmake", "src/demo")
 if is_plat("windows") then
     includes("src/pdcurses")
 end

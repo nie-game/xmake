@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -41,14 +41,14 @@ rule("wdk.mof")
         local wdk = target:data("wdk")
 
         -- get mofcomp
-        local mofcomp = find_program("mofcomp", {check = function (program) 
-            local tmpmof = os.tmpfile() 
+        local mofcomp = find_program("mofcomp", {check = function (program)
+            local tmpmof = os.tmpfile()
             io.writefile(tmpmof, "")
             os.run("%s %s", program, tmpmof)
             os.tryrm(tmpmof)
         end})
         assert(mofcomp, "mofcomp not found!")
-        
+
         -- get wmimofck
         local wmimofck = nil
         if arch == "x64" then
@@ -60,7 +60,7 @@ rule("wdk.mof")
             wmimofck = path.join(wdk.bindir, wdk.sdkver, "x86", "wmimofck.exe")
         end
         assert(wmimofck and os.isexec(wmimofck), "wmimofck not found!")
-        
+
         -- save mofcomp and wmimofck
         target:data_set("wdk.mofcomp", mofcomp)
         target:data_set("wdk.wmimofck", wmimofck)
@@ -73,6 +73,7 @@ rule("wdk.mof")
         import("core.base.option")
         import("core.theme.theme")
         import("core.project.depend")
+        import("private.utils.progress")
 
         -- get mofcomp
         local mofcomp = target:data("wdk.mofcomp")
@@ -90,7 +91,7 @@ rule("wdk.mof")
         local header = target:values("wdk.mof.header", sourcefile)
         local headerfile = path.join(outputdir, header and header or (path.basename(sourcefile) .. ".h"))
 
-        -- get some temporary file 
+        -- get some temporary file
         local sourcefile_mof     = path.join(outputdir, path.filename(sourcefile))
         local targetfile_mfl     = path.join(outputdir, "." .. path.basename(sourcefile) .. ".mfl")
         local targetfile_mof     = path.join(outputdir, "." .. path.basename(sourcefile) .. ".mof")
@@ -103,16 +104,11 @@ rule("wdk.mof")
         local dependfile = target:dependfile(headerfile)
         local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
         if not depend.is_changed(dependinfo, {lastmtime = os.mtime(headerfile), values = args}) then
-            return 
+            return
         end
 
         -- trace progress info
-        cprintf("${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} ", opt.progress)
-        if option.get("verbose") then
-            cprint("${dim color.build.object}compiling.wdk.mof %s", sourcefile)
-        else
-            cprint("${color.build.object}compiling.wdk.mof %s", sourcefile)
-        end
+        progress.show(opt.progress, "${color.build.object}compiling.wdk.mof %s", sourcefile)
 
         -- ensure the output directory
         if not os.isdir(outputdir) then

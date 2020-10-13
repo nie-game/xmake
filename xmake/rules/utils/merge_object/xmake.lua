@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -31,6 +31,7 @@ rule("utils.merge.object")
         import("core.base.option")
         import("core.theme.theme")
         import("core.project.depend")
+        import("private.utils.progress")
 
         -- get object file
         local objectfile = target:objectfile(sourcefile_obj)
@@ -38,29 +39,20 @@ rule("utils.merge.object")
         -- add objectfile
         table.insert(target:objectfiles(), objectfile)
 
-        -- load dependent info 
+        -- load dependent info
         local dependfile = target:dependfile(objectfile)
         local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
 
         -- need build this object?
         if not depend.is_changed(dependinfo, {lastmtime = os.mtime(objectfile)}) then
-            return 
+            return
         end
 
         -- trace progress info
-        cprintf("${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} ", opt.progress)
-        if option.get("verbose") then
-            cprint("${dim color.build.object}inserting.$(mode) %s", sourcefile_obj)
-            print("copying %s to %s", sourcefile_obj, objectfile)
-        else
-            cprint("${color.build.object}inserting.$(mode) %s", sourcefile_obj)
-        end
-
-        -- flush io buffer to update progress info
-        io.flush()
+        progress.show(opt.progress, "${color.build.object}inserting.$(mode) %s", sourcefile_obj)
 
         -- insert this object file
-        os.cp(sourcefile_obj, objectfile)
+        os.vcp(sourcefile_obj, objectfile)
 
         -- update files to the dependent file
         dependinfo.files = {}

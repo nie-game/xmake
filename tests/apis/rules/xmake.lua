@@ -27,8 +27,8 @@ rule("c code")
     end)
     on_build_file(function (target, sourcefile, opt)
         import("core.theme.theme")
-        local progress_prefix = "${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} "
-        cprint(progress_prefix .. "compiling.$(mode) %s", opt.progress, sourcefile)
+        import("private.utils.progress")
+        progress.show(opt.progress, "compiling.$(mode) %s", sourcefile)
         local objectfile_o = os.tmpfile() .. ".o"
         local sourcefile_c = os.tmpfile() .. ".c"
         os.cp(sourcefile, sourcefile_c)
@@ -142,7 +142,8 @@ target("test")
     add_rules("stub1")
 
     -- add files
-    add_files("src/*.c", {rules = {"stub0a", "stub0b"}}) 
+    add_files("src/*.c|main2.c", {rules = {"stub0a", "stub0b"}})
+    add_files("src/main2.c", {rules = {"stub0a", "stub0b", override = true}})
     add_files("src/man/*.in",   {rule = "man"})
     add_files("src/index.md")
     add_files("src/test.c.in",  {rule = "c code"})

@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -32,7 +32,7 @@ import("detect.tools.find_devenv")
 import("detect.tools.find_vsjitdebugger")
 
 -- run gdb
-function _run_gdb(program, argv)
+function _run_gdb(program, argv, opt)
 
     -- find gdb
     local gdb = find_gdb({program = config.get("debugger")})
@@ -46,14 +46,12 @@ function _run_gdb(program, argv)
     table.insert(argv, 1, "--args")
 
     -- run it
-    os.execv(gdb, argv)
-
-    -- ok
+    os.execv(gdb, argv, opt)
     return true
 end
 
 -- run cuda-gdb
-function _run_cudagdb(program, argv)
+function _run_cudagdb(program, argv, opt)
 
     -- find cudagdb
     local gdb = find_cudagdb({program = config.get("debugger")})
@@ -67,14 +65,12 @@ function _run_cudagdb(program, argv)
     table.insert(argv, 1, "--args")
 
     -- run it
-    os.execv(gdb, argv)
-
-    -- ok
+    os.execv(gdb, argv, opt)
     return true
 end
 
 -- run lldb
-function _run_lldb(program, argv)
+function _run_lldb(program, argv, opt)
 
     -- find lldb
     local lldb = find_lldb({program = config.get("debugger")})
@@ -82,25 +78,25 @@ function _run_lldb(program, argv)
         return false
     end
 
-    -- attempt to split name, e.g. xcrun -sdk macosx lldb 
+    -- attempt to split name, e.g. xcrun -sdk macosx lldb
     local names = lldb:split("%s")
 
     -- patch arguments
     argv = argv or {}
+    table.insert(argv, 1, "--")
     table.insert(argv, 1, program)
+    table.insert(argv, 1, "-f")
     for i = #names, 2, -1 do
         table.insert(argv, 1, names[i])
     end
 
     -- run it
-    os.execv(names[1], argv)
-
-    -- ok
+    os.execv(names[1], argv, opt)
     return true
 end
 
 -- run windbg
-function _run_windbg(program, argv)
+function _run_windbg(program, argv, opt)
 
     -- find windbg
     local windbg = find_windbg({program = config.get("debugger")})
@@ -113,14 +109,13 @@ function _run_windbg(program, argv)
     table.insert(argv, 1, program)
 
     -- run it
-    os.execv(windbg, argv)
-
-    -- ok
+    opt.detach = true
+    os.execv(windbg, argv, opt)
     return true
 end
 
 -- run cuda-memcheck
-function _run_cudamemcheck(program, argv)
+function _run_cudamemcheck(program, argv, opt)
 
     -- find cudamemcheck
     local cudamemcheck = find_cudamemcheck({program = config.get("debugger")})
@@ -133,14 +128,12 @@ function _run_cudamemcheck(program, argv)
     table.insert(argv, 1, program)
 
     -- run it
-    os.execv(cudamemcheck, argv)
-
-    -- ok
+    os.execv(cudamemcheck, argv, opt)
     return true
 end
 
 -- run x64dbg
-function _run_x64dbg(program, argv)
+function _run_x64dbg(program, argv, opt)
 
     -- find x64dbg
     local x64dbg = find_x64dbg({program = config.get("debugger")})
@@ -153,14 +146,13 @@ function _run_x64dbg(program, argv)
     table.insert(argv, 1, program)
 
     -- run it
-    os.execv(x64dbg, argv)
-
-    -- ok
+    opt.detach = true
+    os.execv(x64dbg, argv, opt)
     return true
 end
 
 -- run ollydbg
-function _run_ollydbg(program, argv)
+function _run_ollydbg(program, argv, opt)
 
     -- find ollydbg
     local ollydbg = find_ollydbg({program = config.get("debugger")})
@@ -173,14 +165,13 @@ function _run_ollydbg(program, argv)
     table.insert(argv, 1, program)
 
     -- run it
-    os.execv(ollydbg, argv)
-
-    -- ok
+    opt.detach = true
+    os.execv(ollydbg, argv, opt)
     return true
 end
 
 -- run vsjitdebugger
-function _run_vsjitdebugger(program, argv)
+function _run_vsjitdebugger(program, argv, opt)
 
     -- find vsjitdebugger
     local vsjitdebugger = find_vsjitdebugger({program = config.get("debugger")})
@@ -193,14 +184,13 @@ function _run_vsjitdebugger(program, argv)
     table.insert(argv, 1, program)
 
     -- run it
-    os.execv(vsjitdebugger, argv)
-
-    -- ok
+    opt.detach = true
+    os.execv(vsjitdebugger, argv, opt)
     return true
 end
 
 -- run devenv
-function _run_devenv(program, argv)
+function _run_devenv(program, argv, opt)
 
     -- find devenv
     local devenv = find_devenv({program = config.get("debugger")})
@@ -214,9 +204,8 @@ function _run_devenv(program, argv)
     table.insert(argv, 2, program)
 
     -- run it
-    os.execv(devenv, argv)
-
-    -- ok
+    opt.detach = true
+    os.execv(devenv, argv, opt)
     return true
 end
 
@@ -228,13 +217,13 @@ end
 -- @code
 --
 -- import("devel.debugger")
--- 
+--
 -- debugger.run("test")
 -- debugger.run("echo", {"hello xmake!"})
 --
 -- @endcode
 --
-function main(program, argv)
+function main(program, argv, opt)
 
     -- init debuggers
     local debuggers =
@@ -254,7 +243,8 @@ function main(program, argv)
         table.insert(debuggers, 1, {"devenv",           _run_devenv})
     end
 
-    -- get debugger from the configure
+    -- get debugger from configuration
+    opt = opt or {}
     local debugger = config.get("debugger")
     if debugger then
 
@@ -263,7 +253,7 @@ function main(program, argv)
         local debuggername = path.basename(debugger)
         for _, _debugger in ipairs(debuggers) do
             if debuggername:startswith(_debugger[1]) then
-                if _debugger[2](program, argv) then
+                if _debugger[2](program, argv, opt) then
                     return
                 end
             end
@@ -271,7 +261,7 @@ function main(program, argv)
 
         for _, _debugger in ipairs(debuggers) do
             if debugger:find(_debugger[1]) then
-                if _debugger[2](program, argv) then
+                if _debugger[2](program, argv, opt) then
                     return
                 end
             end
@@ -279,7 +269,7 @@ function main(program, argv)
     else
         -- run debugger
         for _, _debugger in ipairs(debuggers) do
-            if _debugger[2](program, argv) then
+            if _debugger[2](program, argv, opt) then
                 return
             end
         end

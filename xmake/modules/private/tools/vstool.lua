@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -31,10 +31,10 @@ function runv(program, argv, opt)
 
     -- enable unicode output for vs toolchains, e.g. cl.exe, link.exe and etc.
     -- @see https://github.com/xmake-io/xmake/issues/528
-    local envs = {VS_UNICODE_OUTPUT = outfile:rawfd()}
+    opt.envs = table.join(opt.envs or {}, {VS_UNICODE_OUTPUT = outfile:rawfd()})
 
     -- execute it
-    local ok, syserrors = os.execv(program, argv, table.join(opt, {try = true, stdout = outfile, stderr = errpath, envs = envs}))
+    local ok, syserrors = os.execv(program, argv, table.join(opt, {try = true, stdout = outfile, stderr = errpath}))
 
     -- close outfile first
     outfile:close()
@@ -93,10 +93,10 @@ function iorunv(program, argv, opt)
 
     -- enable unicode output for vs toolchains, e.g. cl.exe, link.exe and etc.
     -- @see https://github.com/xmake-io/xmake/issues/528
-    local envs = {VS_UNICODE_OUTPUT = outfile:rawfd()}
+    opt.envs = table.join(opt.envs or {}, {VS_UNICODE_OUTPUT = outfile:rawfd()})
 
     -- run command
-    local ok, syserrors = os.execv(program, argv, table.join(opt, {try = true, stdout = outfile, stderr = errpath, envs = envs}))
+    local ok, syserrors = os.execv(program, argv, table.join(opt, {try = true, stdout = outfile, stderr = errpath}))
 
     -- get output and error data
     outfile:close()

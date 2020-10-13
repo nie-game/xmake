@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -22,18 +22,35 @@
 import("core.base.option")
 import("core.project.config")
 
+-- translate path
+function _translate_path(package, p)
+    if p and is_host("windows") and package:is_plat("mingw") then
+        p = p:gsub("\\", "/")
+    end
+    return p
+end
+
+-- translate windows bin path
+function _translate_windows_bin_path(bin_path)
+    if bin_path then
+        local argv = os.argv(bin_path)
+        argv[1] = argv[1]:gsub("\\", "/") .. ".exe"
+        return os.args(argv)
+    end
+end
+
 -- get configs
 function _get_configs(package, configs)
 
     -- add prefix
     local configs = configs or {}
-    table.insert(configs, "--prefix=" .. package:installdir())
+    table.insert(configs, "--prefix=" .. _translate_path(package, package:installdir()))
 
     -- add host for cross-complation
     if not configs.host and not package:is_plat(os.subhost()) then
         if package:is_plat("iphoneos") then
-            local triples = 
-            { 
+            local triples =
+            {
                 arm64  = "aarch64-apple-darwin",
                 arm64e = "aarch64-apple-darwin",
                 armv7  = "armv7-apple-darwin",
@@ -44,7 +61,7 @@ function _get_configs(package, configs)
             table.insert(configs, "--host=" .. (triples[package:arch()] or triples.arm64))
         elseif package:is_plat("android") then
             -- @see https://developer.android.com/ndk/guides/other_build_systems#autoconf
-            local triples = 
+            local triples =
             {
                 ["armv5te"]     = "arm-linux-androideabi",  -- deprecated
                 ["armv7-a"]     = "arm-linux-androideabi",  -- deprecated
@@ -59,8 +76,8 @@ function _get_configs(package, configs)
             }
             table.insert(configs, "--host=" .. (triples[package:arch()] or triples["armeabi-v7a"]))
         elseif package:is_plat("mingw") then
-            local triples = 
-            { 
+            local triples =
+            {
                 i386   = "i686-w64-mingw32",
                 x86_64 = "x86_64-w64-mingw32"
             }
@@ -113,10 +130,19 @@ function buildenvs(package)
             local ld = envs.LD
             if ld then
                 if ld:endswith("x86_64-w64-mingw32-g++") then
-                    envs.LD = path.join(path.directory(ld), "x86_64-w64-mingw32-ld")
+                    envs.LD = path.join(path.directory(ld), is_host("windows") and "ld" or "x86_64-w64-mingw32-ld")
                 elseif ld:endswith("i686-w64-mingw32-g++") then
-                    envs.LD = path.join(path.directory(ld), "i686-w64-mingw32-ld")
+                    envs.LD = path.join(path.directory(ld), is_host("windows") and "ld" or "i686-w64-mingw32-ld")
                 end
+            end
+            if is_host("windows") then
+                envs.CC       = _translate_windows_bin_path(envs.CC)
+                envs.AS       = _translate_windows_bin_path(envs.AS)
+                envs.AR       = _translate_windows_bin_path(envs.AR)
+                envs.LD       = _translate_windows_bin_path(envs.LD)
+                envs.LDSHARED = _translate_windows_bin_path(envs.LDSHARED)
+                envs.CPP      = _translate_windows_bin_path(envs.CPP)
+                envs.RANLIB   = _translate_windows_bin_path(envs.RANLIB)
             end
         end
     end
@@ -153,7 +179,7 @@ function configure(package, configs, opt)
     end
 
     -- pass configurations
-    local argv = {}
+    local argv = {"./configure"}
     for name, value in pairs(_get_configs(package, configs)) do
         value = tostring(value):trim()
         if value ~= "" then
@@ -166,7 +192,7 @@ function configure(package, configs, opt)
     end
 
     -- do configure
-    os.vrunv("./configure", argv, {envs = opt.envs or buildenvs(package)})
+    os.vrunv("sh", argv, {envs = opt.envs or buildenvs(package)})
 end
 
 -- install package

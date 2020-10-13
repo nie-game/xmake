@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -21,15 +21,15 @@
 -- define theme
 theme("default")
 
-    -- the success status 
+    -- the success status
     set_text("success", "$ok")
     set_color("success", "green bright")
 
-    -- the failure status 
+    -- the failure status
     set_text("failure", "$failed")
     set_color("failure", "red bright")
 
-    -- the nothing status 
+    -- the nothing status
     set_text("nothing", "$no")
     set_color("nothing", "red bright")
 
@@ -43,6 +43,7 @@ theme("default")
 
     -- the building progress
     set_text("build.progress_format", "[%3d%%]")
+    set_text("build.progress_style", "scroll")
     set_color("build.progress", "green bright")
 
     -- the building object file
@@ -50,6 +51,13 @@ theme("default")
 
     -- the building target file
     set_color("build.target", "magenta bright")
+
+    -- the spinner chars
+    if not is_subhost("msys", "cygwin") then
+        set_text("spinner.chars", '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏')
+    else
+        set_text("spinner.chars", '\\', '-', '/', '|')
+    end
 
     -- color dump
     set_text("dump.default_format", "%s")

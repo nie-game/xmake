@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -22,7 +22,7 @@
 function apis()
 
     -- init apis
-    _g.values = 
+    _g.values =
     {
         -- target.add_xxx
         "target.add_links"
@@ -36,8 +36,14 @@ function apis()
     ,   "option.add_gcflags"
     ,   "option.add_ldflags"
     ,   "option.add_arflags"
+        -- toolchain.add_xxx
+    ,   "toolchain.add_links"
+    ,   "toolchain.add_syslinks"
+    ,   "toolchain.add_gcflags"
+    ,   "toolchain.add_ldflags"
+    ,   "toolchain.add_arflags"
     }
-    _g.pathes = 
+    _g.paths =
     {
         -- target.add_xxx
         "target.add_linkdirs"

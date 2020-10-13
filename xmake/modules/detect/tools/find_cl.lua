@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -22,36 +22,34 @@
 import("lib.detect.find_program")
 import("lib.detect.find_programver")
 
--- find cl 
+-- find cl
 --
 -- @param opt   the argument options, e.g. {version = true}
 --
 -- @return      program, version
 --
--- @code 
+-- @code
 --
 -- local cl = find_cl()
--- 
+--
 -- @endcode
 --
 function main(opt)
 
     -- init options
     opt         = opt or {}
-    opt.check   = opt.check or function (program) os.run(program) end
-    
+    opt.check   = opt.check or function (program) os.runv(program, {}, {envs = opt.envs}) end
+
     -- find program
     local program = find_program(opt.program or "cl.exe", opt)
 
     -- find program version
     local version = nil
     if program and opt and opt.version then
-        opt.command = opt.command or function () local _, info = os.iorun(program); return info end
+        opt.command = opt.command or function () local _, info = os.iorunv(program, {}, {envs = opt.envs}); return info end
         opt.parse   = opt.parse or function (output) return output:match("Version (%d+%.?%d*%.?%d*.-)%s") end
         version     = find_programver(program, opt)
     end
-
-    -- ok?
     return program, version
 end
 

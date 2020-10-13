@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -19,25 +19,27 @@
 --
 
 -- load modules
-local io        = require("base/io")
-local os        = require("base/os")
-local utils     = require("base/utils")
-local colors    = require("base/colors")
-local option    = require("base/option")
-local log       = require("base/log")
-local try       = require("sandbox/modules/try")
-local catch     = require("sandbox/modules/catch")
-local vformat   = require("sandbox/modules/vformat")
+local io         = require("base/io")
+local os         = require("base/os")
+local utils      = require("base/utils")
+local colors     = require("base/colors")
+local option     = require("base/option")
+local log        = require("base/log")
+local deprecated = require("base/deprecated")
+local try        = require("sandbox/modules/try")
+local catch      = require("sandbox/modules/catch")
+local vformat    = require("sandbox/modules/vformat")
 
 -- define module
 local sandbox_utils = sandbox_utils or {}
 
--- inherit the public interfaces of utils
-for k, v in pairs(utils) do
-    if not k:startswith("_") and type(v) == "function" then
-        sandbox_utils[k] = v
-    end
-end
+-- inherit some builtin interfaces
+sandbox_utils.dump    = utils.dump -- do not change to a function call to utils.dump since debug.getinfo is called in utils.dump to get caller info
+sandbox_utils.confirm = utils.confirm
+sandbox_utils.error   = utils.error
+sandbox_utils.warning = utils.warning
+sandbox_utils.trycall = utils.trycall
+sandbox_utils.ifelse  = utils.ifelse
 
 -- print each arguments
 function sandbox_utils._print(...)
@@ -75,13 +77,13 @@ function sandbox_utils.print(format, ...)
                 -- attempt to format message
                 local message = vformat(format, unpack(args))
 
-                -- trace 
+                -- trace
                 utils._print(message)
 
                 -- write to the log file
                 log:printv(message)
             end,
-            catch 
+            catch
             {
                 function (errors)
                     -- print multi-variables with raw lua action
@@ -111,7 +113,7 @@ end
 
 -- print format string, the builtin variables and colors with newline
 function sandbox_utils.cprint(format, ...)
-    
+
     -- init message
     local message = vformat(format, ...)
 
@@ -139,7 +141,7 @@ function sandbox_utils.cprintf(format, ...)
     end
 end
 
--- print the verbose information 
+-- print the verbose information
 function sandbox_utils.vprint(format, ...)
     if option.get("verbose") then
         sandbox_utils.print(format, ...)
@@ -153,7 +155,7 @@ function sandbox_utils.vprintf(format, ...)
     end
 end
 
--- print the diagnosis information 
+-- print the diagnosis information
 function sandbox_utils.dprint(format, ...)
     if option.get("diagnosis") then
         sandbox_utils.print(format, ...)
@@ -167,45 +169,13 @@ function sandbox_utils.dprintf(format, ...)
     end
 end
 
--- print the warning information 
+-- print the warning information
 function sandbox_utils.wprint(format, ...)
     utils.warning(vformat(format, ...))
 end
 
--- clear the current terminal line
-function sandbox_utils.clearline()
-
-    -- we need not clear line if is not a tty
-    if not io.isatty() then
-        return 
-    end
-
-    -- get empty line chars
-    local emptychars = sandbox_utils._EMPTYCHARS
-    if not emptychars then
-
-        -- get left width
-        local width = os.getwinsize()["width"] - 1
-        if not width or width <= 0 then
-            width = 64
-        end
-
-        -- make empty chars
-        emptychars = ""
-        for i = 1, width do
-            emptychars = emptychars .. " "
-        end
-        sandbox_utils._EMPTYCHARS = emptychars
-    end
-
-    -- clear line 
-    sandbox_utils.printf("\r" .. emptychars .. "\r")
-end
-
 -- assert
 function sandbox_utils.assert(value, format, ...)
-
-    -- check
     if not value then
         if format ~= nil then
             os.raiselevel(2, format, ...)
@@ -213,19 +183,8 @@ function sandbox_utils.assert(value, format, ...)
             os.raiselevel(2, "assertion failed!")
         end
     end
-
-    -- return it
     return value
 end
-
--- get user confirm 
-function sandbox_utils.confirm(opt)
-    return utils.confirm(opt)
-end
-
--- dump value
--- do not change to a function call to utils.dump since debug.getinfo is called in utils.dump to get caller info
-sandbox_utils.dump = utils.dump
 
 -- return module
 return sandbox_utils

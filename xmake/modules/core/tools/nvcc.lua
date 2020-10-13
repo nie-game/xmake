@@ -25,6 +25,7 @@ import("core.project.project")
 import("core.platform.platform")
 import("core.language.language")
 import("private.tools.ccache")
+import("private.utils.progress")
 
 -- init it
 function init(self)
@@ -32,6 +33,7 @@ function init(self)
     -- init cuflags
     if not is_plat("windows", "mingw") then
         self:set("shared.cuflags", "-Xcompiler -fPIC")
+        self:set("binary.cuflags", "-Xcompiler -fPIE")
     end
 
     -- add -ccbin
@@ -267,13 +269,33 @@ function link(self, objectfiles, targetkind, targetfile, flags)
     os.runv(linkargv(self, objectfiles, targetkind, targetfile, flags))
 end
 
+-- support `-MMD -MF depfile.d`? some old gcc does not support it at same time
+function _has_flags_mmd_mf(self)
+    local has_mmd_mf = _g._HAS_MMD_MF
+    if has_mmd_mf == nil then
+       has_mmd_mf = self:has_flags({"-MMD", "-MF", os.nuldev()}, "cuflags", { flagskey = "-MMD -MF" }) or false
+        _g._HAS_MMD_MF = has_mmd_mf
+    end
+    return has_mmd_mf
+end
+
+-- support `-MM -o depfile.d`?
+function _has_flags_mm(self)
+    local has_mm = _g._HAS_MM
+    if not has_mmd_mf and has_mm == nil then
+        has_mm = self:has_flags("-MM", "cuflags", { flagskey = "-MM" }) or false
+        _g._HAS_MM = has_mm
+    end
+    return has_mm
+end
+
 -- make the compile arguments list
-function _compargv1(self, sourcefile, objectfile, flags)
+function compargv(self, sourcefile, objectfile, flags)
     return ccache.cmdargv(self:program(), table.join("-c", flags, "-o", objectfile, sourcefile))
 end
 
 -- compile the source file
-function _compile1(self, sourcefile, objectfile, dependinfo, flags)
+function compile(self, sourcefile, objectfile, dependinfo, flags)
 
     -- ensure the object directory
     os.mkdir(path.directory(objectfile))
@@ -283,19 +305,20 @@ function _compile1(self, sourcefile, objectfile, dependinfo, flags)
     try
     {
         function ()
-            -- support `-M -MF depfile.d`?
-            if depfile and _g._HAS_M_MF == nil then
-                _g._HAS_M_MF = self:has_flags({"-M", "-MF", os.nuldev()}, "cuflags", { flagskey = "-M -MF" }) or false
-            end
 
             -- generate includes file
-            if depfile and _g._HAS_M_MF then
-                -- since -MD is not supported, run nvcc twice
-                local compflags = table.join(flags, "-M", "-MF", depfile)
-                os.runv(_compargv1(self, sourcefile, objectfile, compflags))
+            local compflags = flags
+            if depfile then
+                if _has_flags_mmd_mf(self) then
+                    compflags = table.join(compflags, "-MMD", "-MF", depfile)
+                elseif _has_flags_mm(self) then
+                    -- since -MD is not supported, run nvcc twice
+                    os.runv(compargv(self, sourcefile, depfile, table.join(flags, "-MM")))
+                end
             end
 
-            local outdata, errdata = os.iorunv(_compargv1(self, sourcefile, objectfile, flags))
+            -- do compile
+            local outdata, errdata = os.iorunv(compargv(self, sourcefile, objectfile, compflags))
             return (outdata or "") .. (errdata or "")
         end,
         catch
@@ -332,12 +355,15 @@ function _compile1(self, sourcefile, objectfile, dependinfo, flags)
 
                 -- print some warnings
                 if warnings and #warnings > 0 and (option.get("verbose") or option.get("warning")) then
+                    if progress.showing_without_scroll() then
+                        print("")
+                    end
                     cprint("${color.warning}%s", table.concat(table.slice(warnings:split('\n', {plain = true}), 1, 8), '\n'))
                 end
 
                 -- generate the dependent includes
                 if depfile and os.isfile(depfile) then
-                    if dependinfo and self:kind() ~= "as" then
+                    if dependinfo then
                         -- nvcc uses gcc-style depfiles
                         dependinfo.depfiles_gcc = io.readfile(depfile, {continuation = "\\"})
                     end
@@ -348,25 +374,5 @@ function _compile1(self, sourcefile, objectfile, dependinfo, flags)
             end
         }
     }
-end
-
--- make the compile arguments list
-function compargv(self, sourcefiles, objectfile, flags)
-
-    -- only support single source file now
-    assert(type(sourcefiles) ~= "table", "'object:sources' not support!")
-
-    -- for only single source file
-    return _compargv1(self, sourcefiles, objectfile, flags)
-end
-
--- compile the source file
-function compile(self, sourcefiles, objectfile, dependinfo, flags)
-
-    -- only support single source file now
-    assert(type(sourcefiles) ~= "table", "'object:sources' not support!")
-
-    -- for only single source file
-    _compile1(self, sourcefiles, objectfile, dependinfo, flags)
 end
 

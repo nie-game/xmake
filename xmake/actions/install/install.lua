@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -22,125 +22,10 @@
 import("core.base.task")
 import("core.project.rule")
 import("core.project.project")
-
--- install files
-function _install_files(target)
-
-    local srcfiles, dstfiles = target:installfiles()
-    if srcfiles and dstfiles then
-        local i = 1
-        for _, srcfile in ipairs(srcfiles) do
-            local dstfile = dstfiles[i]
-            if dstfile then
-                os.vcp(srcfile, dstfile)
-            end
-            i = i + 1
-        end
-    end
-end
-
--- install binary
-function _install_binary(target)
-
-    -- is phony target?
-    if target:isphony() then
-        return 
-    end
-
-    -- the binary directory
-    local binarydir = path.join(target:installdir(), "bin")
-
-    -- make the binary directory
-    os.mkdir(binarydir)
-
-    -- copy the target file
-    os.vcp(target:targetfile(), binarydir)
-end
-
--- install library
-function _install_library(target)
-
-    -- is phony target?
-    if target:isphony() then
-        return 
-    end
-
-    -- the library directory
-    local librarydir = path.join(target:installdir(), "lib")
-
-    -- the include directory
-    local includedir = path.join(target:installdir(), "include")
-
-    -- make the library directory
-    os.mkdir(librarydir)
-
-    -- make the include directory
-    os.mkdir(includedir)
-
-    -- copy the target file
-    os.vcp(target:targetfile(), librarydir)
-
-    -- copy *.lib for shared/windows (*.dll) target
-    -- @see https://github.com/xmake-io/xmake/issues/714
-    if target:targetkind() == "shared" and is_plat("windows", "mingw") then
-        local targetfile = target:targetfile()
-        local targetfile_lib = path.join(path.directory(targetfile), path.basename(targetfile) .. ".lib")
-        if os.isfile(targetfile_lib) then
-            os.vcp(targetfile_lib, librarydir)
-        end
-    end
-
-    -- copy headers to the include directory
-    local srcheaders, dstheaders = target:headerfiles(includedir)
-    if srcheaders and dstheaders then
-        local i = 1
-        for _, srcheader in ipairs(srcheaders) do
-            local dstheader = dstheaders[i]
-            if dstheader then
-                os.vcp(srcheader, dstheader)
-            end
-            i = i + 1
-        end
-    end
-end
-
--- do install target
-function _do_install_target(target)
-
-    -- get install directory
-    local installdir = target:installdir()
-    if not installdir then
-        return 
-    end
-
-    -- trace
-    print("installing to %s ..", installdir)
-
-    -- the scripts
-    local scripts =
-    {
-        binary = _install_binary
-    ,   static = _install_library
-    ,   shared = _install_library
-    }
-
-    -- call script
-    local script = scripts[target:targetkind()]
-    if script then
-        script(target)
-    end
-
-    -- install other files
-    _install_files(target)
-end
+import("target.action.install", {alias = "_do_install_target"})
 
 -- on install target
 function _on_install_target(target)
-
-    -- has been disabled?
-    if target:get("enabled") == false then
-        return 
-    end
 
     -- trace
     print("installing %s ..", target:name())
@@ -160,8 +45,13 @@ function _on_install_target(target)
     _do_install_target(target)
 end
 
--- install the given target 
+-- install the given target
 function _install_target(target)
+
+    -- has been disabled?
+    if target:get("enabled") == false then
+        return
+    end
 
     -- enter project directory
     local oldir = os.cd(project.directory())
@@ -178,13 +68,6 @@ function _install_target(target)
     {
         target:script("install_before")
     ,   function (target)
-
-            -- has been disabled?
-            if target:get("enabled") == false then
-                return 
-            end
-
-            -- install rules
             for _, r in ipairs(target:orderules()) do
                 local before_install = r:script("install_before")
                 if before_install then
@@ -194,13 +77,6 @@ function _install_target(target)
         end
     ,   target:script("install", _on_install_target)
     ,   function (target)
-
-            -- has been disabled?
-            if target:get("enabled") == false then
-                return 
-            end
-
-            -- install rules
             for _, r in ipairs(target:orderules()) do
                 local after_install = r:script("install_after")
                 if after_install then
@@ -228,41 +104,27 @@ function _install_target(target)
     os.cd(oldir)
 end
 
--- install the given target and deps
-function _install_target_and_deps(target)
-
-    -- this target have been finished?
-    if _g.finished[target:name()] then
-        return 
+-- install the given targets
+function _install_targets(targets)
+    for _, target in ipairs(targets) do
+        _install_target(target)
     end
-
-    -- install for all dependent targets
-    for _, depname in ipairs(target:get("deps")) do
-        _install_target_and_deps(project.target(depname)) 
-    end
-
-    -- install target
-    _install_target(target)
-
-    -- finished
-    _g.finished[target:name()] = true
 end
 
 -- install targets
 function main(targetname)
 
-    -- init finished states
-    _g.finished = {}
-
     -- install the given target?
     if targetname and not targetname:startswith("__") then
-        _install_target_and_deps(project.target(targetname))
+        local target = project.target(targetname)
+        _install_targets(target:orderdeps())
+        _install_target(target)
     else
         -- install default or all targets
-        for _, target in pairs(project.targets()) do
+        for _, target in ipairs(project.ordertargets()) do
             local default = target:get("default")
             if default == nil or default == true or targetname == "__all" then
-                _install_target_and_deps(target)
+                _install_target(target)
             end
         end
     end

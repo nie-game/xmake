@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -24,11 +24,14 @@ import("core.base.option")
 import("core.base.global")
 import("core.base.hashset")
 import("core.base.scheduler")
+import("core.base.tty")
 import("private.async.runjobs")
+import("private.utils.progress")
 import("lib.detect.cache", {alias = "detectcache"})
 import("core.project.project")
 import("core.package.package", {alias = "core_package"})
-import("action")
+import("actions.install", {alias = "action_install"})
+import("actions.download", {alias = "action_download"})
 import("devel.git")
 import("net.fasturl")
 import("repository")
@@ -36,15 +39,34 @@ import("repository")
 --
 -- parse require string
 --
--- add_requires("zlib")
--- add_requires("tbox >=1.5.1", "zlib >=1.2.11")
--- add_requires("zlib master")
--- add_requires("xmake-repo@tbox >=1.5.1")
--- add_requires("aaa_bbb_ccc >=1.5.1 <1.6.0", {optional = true, alias = "mypkg", debug = true})
--- add_requires("tbox", {config = {coroutine = true, abc = "xxx"}})
--- add_requires("xmake::xmake-repo@tbox >=1.5.1")
--- add_requires("conan::OpenSSL/1.0.2n@conan/stable")
--- add_requires("brew::pcre2/libpcre2-8 10.x", {alias = "pcre2"})
+-- basic
+-- - add_requires("zlib")
+--
+-- semver
+-- - add_requires("tbox >=1.5.1", "zlib >=1.2.11")
+--
+-- git branch/tag
+-- - add_requires("zlib master")
+--
+-- with the given repository
+-- - add_requires("xmake-repo@tbox >=1.5.1")
+--
+-- with the given configs
+-- - add_requires("aaa_bbb_ccc >=1.5.1 <1.6.0", {optional = true, alias = "mypkg", debug = true})
+-- - add_requires("tbox", {config = {coroutine = true, abc = "xxx"}})
+--
+-- with namespace and the 3rd package manager
+-- - add_requires("xmake::xmake-repo@tbox >=1.5.1")
+-- - add_requires("vcpkg::ffmpeg")
+-- - add_requires("conan::OpenSSL/1.0.2n@conan/stable")
+-- - add_requires("conan::openssl/1.1.1g") -- new
+-- - add_requires("brew::pcre2/libpcre2-8 10.x", {alias = "pcre2"})
+--
+-- clone as a standalone package with the different configs
+-- we can install and use these three packages at the same time.
+-- - add_requires("zlib")
+-- - add_requires("zlib~debug", {debug = true})
+-- - add_requires("zlib~shared", {configs = {shared = true}, alias = "zlib_shared"})
 --
 -- {system = nil/true/false}:
 --   nil: get local or system packages
@@ -69,10 +91,10 @@ function _parse_require(require_str, requires_extra, parentinfo)
 
     -- get version
     --
-    -- e.g. 
-    -- 
+    -- e.g.
+    --
     -- latest
-    -- >=1.5.1 <1.6.0  
+    -- >=1.5.1 <1.6.0
     -- master || >1.4
     -- ~1.2.3
     -- ^1.1
@@ -97,9 +119,9 @@ function _parse_require(require_str, requires_extra, parentinfo)
             -- get package name
             packagename = packageinfo:sub(pos + 1)
 
-            -- get reponame 
+            -- get reponame
             reponame = packageinfo:sub(1, pos - 1)
-        else 
+        else
             packagename = packageinfo
         end
     end
@@ -135,8 +157,9 @@ function _parse_require(require_str, requires_extra, parentinfo)
         originstr        = require_str,
         reponame         = reponame,
         version          = version,
-        plat             = require_extra.plat,      -- require package in the given platform 
+        plat             = require_extra.plat,      -- require package in the given platform
         arch             = require_extra.arch,      -- require package in the given architecture
+        kind             = require_extra.kind,      -- default: library, set package kind, e.g. binary, library, we can set `kind = "binary"` to only detect binary program and ignore library.
         alias            = require_extra.alias,     -- set package alias name
         group            = require_extra.group,     -- only uses the first package in same group
         system           = require_extra.system,    -- default: true, we can set it to disable system package manually
@@ -166,11 +189,8 @@ end
 
 -- load package package from repositories
 function _load_package_from_repository(packagename, reponame)
-
-    -- get package directory from the given package name
     local packagedir, repo = repository.packagedir(packagename, reponame)
     if packagedir then
-        -- load it
         return core_package.load_from_repository(packagename, repo, packagedir)
     end
 end
@@ -190,7 +210,7 @@ end
 
 -- sort package deps
 --
--- e.g. 
+-- e.g.
 --
 -- a.deps = b
 -- b.deps = c
@@ -201,7 +221,7 @@ function _sort_packagedeps(package)
     local orderdeps = {}
     for _, dep in pairs(package:deps()) do
         table.join2(orderdeps, _sort_packagedeps(dep))
-        table.insert(orderdeps, dep) 
+        table.insert(orderdeps, dep)
     end
     return orderdeps
 end
@@ -240,6 +260,11 @@ function _select_package_version(package, requireinfo)
             version, source = semver.select(require_version, package:versions())
         elseif has_giturl then -- select branch?
             version, source = require_version ~= "latest" and require_version or "master", "branches"
+        elseif not package:get("versions") and semver.is_valid(require_version) then
+            -- no version list in package()? try this version directly
+            -- @see https://github.com/xmake-io/xmake/issues/930
+            version = require_version
+            source = "versions"
         else
             raise("package(%s %s): not found!", package:name(), require_version)
         end
@@ -298,7 +323,7 @@ function _load_package(packagename, requireinfo, opt)
     local package = packages[packagename]
     if package then
 
-        -- satisfy required version? 
+        -- satisfy required version?
         local version_required = _select_package_version(package, requireinfo)
         if version_required and version_required ~= package:version_str() then
             raise("package(%s): version conflict, '%s' does not satisfy '%s'!", packagename, package:version_str(), requireinfo.version)
@@ -310,7 +335,7 @@ function _load_package(packagename, requireinfo, opt)
     if os.isfile(os.projectfile()) then
         package = _load_package_from_project(packagename)
     end
-        
+
     -- load package from repositories
     if not package then
         package = _load_package_from_repository(packagename, requireinfo.reponame)
@@ -351,8 +376,6 @@ function _load_package(packagename, requireinfo, opt)
     -- save this package package to cache
     packages[packagename] = package
     _g._PACKAGES = packages
-
-    -- ok
     return package
 end
 
@@ -368,7 +391,7 @@ function _load_packages(requires, opt)
     local packages = {}
     for _, requireinfo in ipairs(load_requires(requires, opt.requires_extra, opt.parentinfo)) do
 
-        -- load package 
+        -- load package
         local package = _load_package(requireinfo.name, requireinfo.info, opt)
 
         -- maybe package not found and optional
@@ -427,7 +450,7 @@ function _sort_packages_urls(packages)
         package:urls_set(fasturl.sort(package:urls()))
     end
 end
- 
+
 -- get package status string
 function _get_package_status_str(package)
     local status = {}
@@ -498,7 +521,7 @@ function _get_confirm(packages)
     return confirm
 end
 
--- patch some builtin dependent packages 
+-- patch some builtin dependent packages
 function _patch_packages(packages_install, packages_download)
 
     -- @NOTE use git.apply instead of patch
@@ -532,11 +555,10 @@ end
 function _install_packages(packages_install, packages_download)
 
     -- we need hide wait characters if is not a tty
-    local show_wait = io.isatty() 
+    local show_wait = io.isatty()
 
     -- do install
-    local waitindex = 0
-    local waitchars = {'\\', '-', '/', '|'}
+    local progress_helper = show_wait and progress.new() or nil
     local packages_installing = {}
     local packages_downloading = {}
     local packages_pending = table.copy(packages_install)
@@ -545,7 +567,7 @@ function _install_packages(packages_install, packages_download)
     local parallelize = true
     runjobs("install_packages", function (index)
 
-        -- fetch a new package 
+        -- fetch a new package
         local package = nil
         while package == nil and #packages_pending > 0 do
             for idx, pkg in ipairs(packages_pending) do
@@ -607,14 +629,14 @@ function _install_packages(packages_install, packages_download)
                 local downloaded = true
                 if packages_download[tostring(package)] then
                     packages_downloading[index] = package
-                    downloaded = action.download(package)
+                    downloaded = action_download(package)
                     packages_downloading[index] = nil
                 end
-            
+
                 -- install this package
                 packages_installing[index] = package
                 if downloaded then
-                    action.install(package)
+                    action_install(package)
                 end
                 packages_installing[index] = nil
 
@@ -631,15 +653,12 @@ function _install_packages(packages_install, packages_download)
         packages_installing[index] = nil
         packages_downloading[index] = nil
 
-    end, {total = #packages_install, comax = (option.get("verbose") or option.get("diagnosis")) and 1 or 4, timer = function (running_jobs_indices) 
+    end, {total = #packages_install, comax = (option.get("verbose") or option.get("diagnosis")) and 1 or 4, on_timer = function (running_jobs_indices)
 
-        -- do not print progress info if be verbose 
+        -- do not print progress info if be verbose
         if option.get("verbose") or not show_wait then
-            return 
+            return
         end
- 
-        -- update waitchar index
-        waitindex = ((waitindex + 1) % #waitchars)
 
         -- make installing and downloading packages list
         local installing = {}
@@ -680,7 +699,8 @@ function _install_packages(packages_install, packages_download)
         end
 
         -- trace
-        utils.clearline()
+        progress_helper:clear()
+        tty.erase_line_to_start().cr()
         cprintf("${yellow}  => ")
         if #downloading > 0 then
             cprintf("downloading ${magenta}%s", table.concat(downloading, ", "))
@@ -688,11 +708,11 @@ function _install_packages(packages_install, packages_download)
         if #installing > 0 then
             cprintf("%sinstalling ${magenta}%s", #downloading > 0 and ", " or "", table.concat(installing, ", "))
         end
-        cprintf(" .. %s%s", tips and ("${dim}" .. tips .. "${clear} ") or "", waitchars[waitindex + 1])
-        io.flush()
+        cprintf(" .. %s", tips and ("${dim}" .. tips .. "${clear} ") or "")
+        progress_helper:write()
     end, exit = function(errors)
         if errors then
-            utils.clearline()
+            tty.erase_line_to_start().cr()
             io.flush()
         end
     end})
@@ -705,19 +725,11 @@ end
 
 -- load requires
 function load_requires(requires, requires_extra, parentinfo)
-
-    -- parse requires
     local requireinfos = {}
     for _, require_str in ipairs(requires) do
-
-        -- parse require info
         local packagename, requireinfo = _parse_require(require_str, requires_extra, parentinfo)
-
-        -- save this required package
         table.insert(requireinfos, {name = packagename, info = requireinfo})
     end
-
-    -- ok
     return requireinfos
 end
 
@@ -727,7 +739,7 @@ function load_packages(requires, opt)
     local unique = {}
     local packages = {}
     for _, package in ipairs(_load_packages(requires, opt)) do
-        -- remove repeat packages with same the package name and version 
+        -- remove repeat packages with same the package name and version
         local key = package:name() .. (package:version_str() or "")
         if not unique[key] then
             table.insert(packages, package)
@@ -783,7 +795,7 @@ function install_packages(requires, opt)
         raise()
     end
 
-    -- patch some dependent builtin packages 
+    -- patch some dependent builtin packages
     _patch_packages(packages_install, packages_download)
 
     -- get user confirm
@@ -798,7 +810,7 @@ function install_packages(requires, opt)
             raise("packages(%s): must be installed!", table.concat(packages_must, ", "))
         else
             -- continue other actions
-            return 
+            return
         end
     end
 
@@ -840,9 +852,6 @@ function export_packages(requires, opt)
 
     -- init options
     opt = opt or {}
-
-    -- do not export dependent packages
-    opt.nodeps = true
 
     -- get the export directory
     local exportdir = assert(opt.exportdir)

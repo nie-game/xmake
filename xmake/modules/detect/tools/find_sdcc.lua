@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -22,16 +22,16 @@
 import("lib.detect.find_program")
 import("lib.detect.find_programver")
 
--- find dmd 
+-- find dmd
 --
 -- @param opt   the argument options, e.g. {version = true}
 --
 -- @return      program, version
 --
--- @code 
+-- @code
 --
 -- local dmd = find_sdcc()
--- 
+--
 -- @endcode
 --
 function main(opt)
@@ -39,20 +39,20 @@ function main(opt)
     -- init options
     opt         = opt or {}
     opt.command = opt.command or "--version"
-        
-    -- add search pathes
-    local pathes = {}
+
+    -- add search paths
+    local paths  = {}
     local bindir = get_config("bin")
     if bindir and os.isdir(bindir) then
-        table.insert(pathes, bindir)
+        table.insert(paths, bindir)
     end
     if is_host("windows") then
-        table.insert(pathes, "$(reg HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\SDCC)\\bin")
+        table.insert(paths, "$(reg HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\SDCC)\\bin")
     end
-    if #pathes > 0 then
-        opt.pathes = pathes
+    if #paths > 0 then
+        opt.paths = paths
     end
-    
+
     -- find program
     local program = find_program(opt.program or "sdcc", opt)
 

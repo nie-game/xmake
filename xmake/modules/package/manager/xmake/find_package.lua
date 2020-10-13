@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -33,21 +33,21 @@ function _find_package_from_repo(name, opt)
 
     -- check options
     if not opt.version or not opt.buildhash then
-        return 
+        return
     end
 
-    -- find the manifest file of package, e.g. ~/.xmake/packages/z/zlib/1.1.12/ed41d5327fad3fc06fe376b4a94f62ef/manifest.txt 
+    -- find the manifest file of package, e.g. ~/.xmake/packages/z/zlib/1.1.12/ed41d5327fad3fc06fe376b4a94f62ef/manifest.txt
     local packagedirs = {}
-    table.insert(packagedirs, path.join(package.installdir(), name:sub(1, 1), name, opt.version, opt.buildhash))
+    table.insert(packagedirs, path.join(package.installdir(), name:lower():sub(1, 1), name:lower(), opt.version, opt.buildhash))
     local manifest_file = find_file("manifest.txt", packagedirs)
     if not manifest_file then
-        return 
+        return
     end
 
     -- load manifest info
     local manifest = io.load(manifest_file)
     if not manifest then
-        return 
+        return
     end
 
     -- get manifest variables
@@ -70,6 +70,7 @@ function _find_package_from_repo(name, opt)
     -- get links and link directories
     local links = {}
     local linkdirs = {}
+    local libfiles = {}
     for _, linkdir in ipairs(vars.linkdirs) do
         table.insert(linkdirs, path.join(installdir, linkdir))
     end
@@ -102,6 +103,14 @@ function _find_package_from_repo(name, opt)
             end
         end
     end
+    if opt.plat == "windows" then
+        for _, file in ipairs(os.files(path.join(installdir, "lib", "*.dll"))) do
+            table.insert(libfiles, file)
+        end
+        for _, file in ipairs(os.files(path.join(installdir, "bin", "*.dll"))) do
+            table.insert(libfiles, file)
+        end
+    end
 
     -- add root link directories
     if #linkdirs == 0 then
@@ -113,17 +122,20 @@ function _find_package_from_repo(name, opt)
         links = table.wrap(name)
     end
 
-    -- find library 
+    -- find library
     for _, link in ipairs(links) do
         local libinfo = find_library(link, linkdirs)
         if libinfo then
-            result.links    = table.join(result.links or {}, libinfo.link)
-            result.linkdirs = table.join(result.linkdirs or {}, libinfo.linkdir)
+            result.links     = table.join(result.links or {}, libinfo.link)
+            result.linkdirs  = table.join(result.linkdirs or {}, libinfo.linkdir)
+            result.libfiles = table.join(result.libfiles or {}, path.join(libinfo.linkdir, libinfo.filename))
         end
     end
-    -- make unique links
     if result.links then
         result.links = table.unique(result.links)
+    end
+    if result.libfiles then
+        result.libfiles = table.join(result.libfiles, libfiles)
     end
 
     -- inherit the other prefix variables
@@ -162,13 +174,13 @@ function _find_package_from_packagedirs(name, opt)
         end
     end
     if not packagepath then
-        return 
+        return
     end
 
     -- get package file (e.g. name.pkg/xmake.lua)
     local packagefile = path.join(packagepath, "xmake.lua")
     if not os.isfile(packagefile) then
-        return 
+        return
     end
 
     -- init interpreter
@@ -176,13 +188,13 @@ function _find_package_from_packagedirs(name, opt)
 
     -- register filter handler
     interp:filter():register("find_package", function (variable)
- 
+
         -- init maps
-        local maps = 
+        local maps =
         {
             arch       = opt.arch
         ,   plat       = opt.plat
-        ,   mode       = opt.mode 
+        ,   mode       = opt.mode
         }
 
         -- get variable
@@ -203,11 +215,11 @@ function _find_package_from_packagedirs(name, opt)
 
     -- unregister filter handler
     interp:filter():register("find_package", nil)
- 
+
     -- get package info
     local packageinfo = packageinfos[name]
     if not packageinfo then
-        return 
+        return
     end
 
     -- get linkdirs
@@ -216,10 +228,10 @@ function _find_package_from_packagedirs(name, opt)
         table.insert(linkdirs, path.join(packagepath, linkdir))
     end
     if #linkdirs == 0 then
-        return 
+        return
     end
 
-    -- find library 
+    -- find library
     local result = nil
     for _, link in ipairs(packageinfo:get("links")) do
         local libinfo = find_library(link, linkdirs)
@@ -227,6 +239,7 @@ function _find_package_from_packagedirs(name, opt)
             result          = result or {}
             result.links    = table.join(result.links or {}, libinfo.link)
             result.linkdirs = table.join(result.linkdirs or {}, libinfo.linkdir)
+            result.libfiles = table.join(result.libfiles or {}, path.join(libinfo.linkdir, libinfo.filename))
         end
     end
 

@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -95,7 +95,7 @@ function _find_xcode(sdkdir, xcode_sdkver, plat, arch)
     end
 
     -- find mobile provision only for iphoneos
-    local mobile_provision 
+    local mobile_provision
     if is_plat("iphoneos") then
         local mobile_provisions = codesign.mobile_provisions()
         if mobile_provisions then
@@ -120,15 +120,15 @@ end
 -- find xcode toolchain
 --
 -- @param sdkdir    the xcode directory
--- @param opt       the argument options 
---                  e.g. {verbose = true, force = false, sdkver = 19, toolchains_ver = "4.9"}  
+-- @param opt       the argument options
+--                  e.g. {verbose = true, force = false, sdkver = 19, toolchains_ver = "4.9"}
 --
 -- @return          the xcode toolchain. e.g. {bindir = .., cross = ..}
 --
--- @code 
+-- @code
 --
 -- local toolchain = find_xcode("/Applications/Xcode.app")
--- 
+--
 -- @endcode
 --
 function main(sdkdir, opt)
@@ -147,30 +147,36 @@ function main(sdkdir, opt)
     local plat = opt.plat or config.get("plat") or "macosx"
     local arch = opt.arch or config.get("arch") or "x86_64"
 
+    -- get xcode sdk version
+    local xcode_sdkver = (plat == config.plat()) and config.get("xcode_sdkver")
+    if not xcode_sdkver then
+        xcode_sdkver = config.get("xcode_sdkver_" .. plat)
+    end
+
     -- find xcode
-    local xcode = _find_xcode(sdkdir or config.get("xcode") or global.get("xcode") or config.get("sdk"), opt.sdkver or config.get("xcode_sdkver"), plat, arch)
+    local xcode = _find_xcode(sdkdir or config.get("xcode") or global.get("xcode"), opt.sdkver or xcode_sdkver, plat, arch)
     if xcode and xcode.sdkdir then
 
         -- save to config
         config.set("xcode", xcode.sdkdir, {force = true, readonly = true})
-        config.set("xcode_sdkver", xcode.sdkver, {force = true, readonly = true})
+        config.set("xcode_sdkver_" .. plat, xcode.sdkver, {force = true, readonly = true})
         config.set("xcode_codesign_identity", xcode.codesign_identity, {force = true, readonly = true})
         config.set("xcode_mobile_provision", xcode.mobile_provision, {force = true, readonly = true})
 
         -- trace
         if opt.verbose or option.get("verbose") then
-            cprint("checking for the Xcode directory ... ${color.success}%s", xcode.sdkdir)
-            cprint("checking for the SDK version of Xcode ... ${color.success}%s", xcode.sdkver)
+            cprint("checking for Xcode directory ... ${color.success}%s", xcode.sdkdir)
+            cprint("checking for SDK version of Xcode ... ${color.success}%s", xcode.sdkver)
             if xcode.codesign_identity then
-                cprint("checking for the Codesign Identity of Xcode ... ${color.success}%s", xcode.codesign_identity)
+                cprint("checking for Codesign Identity of Xcode ... ${color.success}%s", xcode.codesign_identity)
             else
-                cprint("checking for the Codesign Identity of Xcode ... ${color.nothing}${text.nothing}")
+                cprint("checking for Codesign Identity of Xcode ... ${color.nothing}${text.nothing}")
             end
-            if is_plat("iphoneos") then
+            if plat == "iphoneos" then
                 if xcode.mobile_provision then
-                    cprint("checking for the Mobile Provision of Xcode ... ${color.success}%s", xcode.mobile_provision)
+                    cprint("checking for Mobile Provision of Xcode ... ${color.success}%s", xcode.mobile_provision)
                 else
-                    cprint("checking for the Mobile Provision of Xcode ... ${color.nothing}${text.nothing}")
+                    cprint("checking for Mobile Provision of Xcode ... ${color.nothing}${text.nothing}")
                 end
             end
         end
@@ -178,7 +184,7 @@ function main(sdkdir, opt)
 
         -- trace
         if opt.verbose or option.get("verbose") then
-            cprint("checking for the Xcode directory ... ${color.nothing}${text.nothing}")
+            cprint("checking for Xcode directory ... ${color.nothing}${text.nothing}")
         end
     end
 

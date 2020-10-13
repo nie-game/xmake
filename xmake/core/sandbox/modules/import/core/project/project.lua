@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -39,8 +39,11 @@ local import      = require("sandbox/modules/import")
 sandbox_core_project.get          = project.get
 sandbox_core_project.rule         = project.rule
 sandbox_core_project.rules        = project.rules
+sandbox_core_project.toolchain    = project.toolchain
+sandbox_core_project.toolchains   = project.toolchains
 sandbox_core_project.target       = project.target
 sandbox_core_project.targets      = project.targets
+sandbox_core_project.ordertargets = project.ordertargets
 sandbox_core_project.option       = project.option
 sandbox_core_project.options      = project.options
 sandbox_core_project.rootfile     = project.rootfile
@@ -56,6 +59,8 @@ sandbox_core_project.require      = project.require
 sandbox_core_project.requires     = project.requires
 sandbox_core_project.requires_str = project.requires_str
 sandbox_core_project.policy       = project.policy
+sandbox_core_project.tmpdir       = project.tmpdir
+sandbox_core_project.tmpfile      = project.tmpfile
 
 -- load project
 function sandbox_core_project.load()
@@ -81,12 +86,9 @@ function sandbox_core_project.check()
         raise(errors)
     end
 
-    -- enter toolchains environment
-    environment.enter("toolchains")
-
     -- init check task
     local checked   = {}
-    local checktask = function (index) 
+    local checktask = function (index)
 
         -- get option
         local opt = options[index]
@@ -102,7 +104,7 @@ function sandbox_core_project.check()
 
             -- check this option
             if not checked[opt:name()] then
-                opt:check() 
+                opt:check()
                 checked[opt:name()] = true
             end
         end
@@ -112,11 +114,29 @@ function sandbox_core_project.check()
     local jobs = baseoption.get("jobs") or math.ceil(os.cpuinfo().ncpu * 3 / 2)
     import("private.async.runjobs", {anonymous = true})("check_options", instance:fork(checktask):script(), {total = #options, comax = jobs})
 
-    -- leave toolchains environment
-    environment.leave("toolchains")
-
     -- save all options to the cache file
     option.save()
+
+    -- check toolchains configuration for all target in the current project
+    -- @note we must check targets after loading options
+    for _, target in pairs(table.wrap(targets)) do
+        if target:get("enabled") ~= false and (target:get("toolchains") or target:plat() ~= config.get("plat")) then
+            for _, toolchain_inst in pairs(target:toolchains()) do
+                -- check toolchains for `target/set_toolchains()`
+                if target:get("toolchains") then
+                    if not toolchain_inst:check() then
+                        raise("toolchain(\"%s\"): not found!", toolchain_inst:name())
+                    end
+                else
+                    -- check platform toolchains for `target/set_plat()`
+                    local ok, errors = target:platform():check()
+                    if not ok then
+                        raise(errors)
+                    end
+                end
+            end
+        end
+    end
 
     -- leave the project directory
     local ok, errors = os.cd(oldir)
@@ -127,14 +147,14 @@ end
 
 -- get the filelock of the whole project directory
 function sandbox_core_project.filelock()
-    local filelock = project.filelock()
+    local filelock, errors = project.filelock()
     if not filelock then
-        raise("cannot create the project lock!")
+        raise("cannot create the project lock, %s!", errors or "unknown errors")
     end
     return filelock
 end
 
--- lock the whole project 
+-- lock the whole project
 function sandbox_core_project.lock(opt)
     if sandbox_core_project.trylock(opt) then
         return true
@@ -147,12 +167,12 @@ function sandbox_core_project.lock(opt)
     end
 end
 
--- trylock the whole project 
+-- trylock the whole project
 function sandbox_core_project.trylock(opt)
     return sandbox_core_project.filelock():trylock(opt)
 end
 
--- unlock the whole project 
+-- unlock the whole project
 function sandbox_core_project.unlock()
     local ok, errors = sandbox_core_project.filelock():unlock()
     if not ok then

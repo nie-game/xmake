@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -19,44 +19,26 @@
 --
 
 -- imports
+import("core.base.option")
+import("core.project.project")
 import("private.tools.cl.parse_deps", {alias = "parse_deps_cl"})
+import("private.tools.cl.parse_deps_json", {alias = "parse_deps_cl_json"})
+import("private.tools.rc.parse_deps", {alias = "parse_deps_rc"})
 import("private.tools.gcc.parse_deps", {alias = "parse_deps_gcc"})
 
--- load depfiles for gcc
-function _load_depfiles_gcc(dependinfo)
-
-    local depfiles = dependinfo.depfiles_gcc
+-- load depfiles
+function _load_depfiles(parser, dependinfo, depfiles)
+    depfiles = parser(depfiles)
     if depfiles then
-        depfiles = parse_deps_gcc(depfiles)
-        if depfiles then
-            if dependinfo.files then
-                table.join2(dependinfo.files, depfiles)
-            else
-                dependinfo.files = depfiles
-            end
+        if dependinfo.files then
+            table.join2(dependinfo.files, depfiles)
+        else
+            dependinfo.files = depfiles
         end
-        dependinfo.depfiles_gcc = nil
     end
 end
 
--- load depfiles for cl
-function _load_depfiles_cl(dependinfo)
-
-    local depfiles = dependinfo.depfiles_cl
-    if depfiles then
-        depfiles = parse_deps_cl(depfiles)
-        if depfiles then
-            if dependinfo.files then
-                table.join2(dependinfo.files, depfiles)
-            else
-                dependinfo.files = depfiles
-            end
-        end
-        dependinfo.depfiles_cl = nil
-    end
-end
-
--- load dependent info from the given file (.d) 
+-- load dependent info from the given file (.d)
 function load(dependfile)
 
     if os.isfile(dependfile) then
@@ -64,10 +46,18 @@ function load(dependfile)
         local dependinfo = try { function() return io.load(dependfile) end }
         if dependinfo then
             -- attempt to load depfiles from the compilers
-            if is_plat("windows") then
-                _load_depfiles_cl(dependinfo)
-            else
-                _load_depfiles_gcc(dependinfo)
+            if dependinfo.depfiles_gcc then
+                _load_depfiles(parse_deps_gcc, dependinfo, dependinfo.depfiles_gcc)
+                dependinfo.depfiles_gcc = nil
+            elseif dependinfo.depfiles_cl_json then
+                _load_depfiles(parse_deps_cl_json, dependinfo, dependinfo.depfiles_cl_json)
+                dependinfo.depfiles_cl_json = nil
+            elseif dependinfo.depfiles_cl then
+                _load_depfiles(parse_deps_cl, dependinfo, dependinfo.depfiles_cl)
+                dependinfo.depfiles_cl = nil
+            elseif dependinfo.depfiles_rc then
+                _load_depfiles(parse_deps_rc, dependinfo, dependinfo.depfiles_rc)
+                dependinfo.depfiles_rc = nil
             end
             return dependinfo
         end
@@ -82,7 +72,7 @@ end
 -- the dependent info is changed?
 --
 -- if not depend.is_changed(dependinfo, {filemtime = os.mtime(objectfile), values = {...}}) then
---      return 
+--      return
 -- end
 --
 function is_changed(dependinfo, opt)
@@ -118,7 +108,7 @@ function is_changed(dependinfo, opt)
     end
     for idx, depvalue in ipairs(depvalues) do
         local optvalue = optvalues[idx]
-        local deptype = type(depvalue) 
+        local deptype = type(depvalue)
         local opttype = type(optvalue)
         if deptype ~= opttype then
             return true
@@ -142,4 +132,57 @@ function is_changed(dependinfo, opt)
             end
         end
     end
+end
+
+-- on changed for the dependent files and values
+--
+-- e.g.
+--
+-- depend.on_changed(function ()
+--     -- do some thing
+--     -- ..
+--
+--     -- maybe need update dependent files
+--     dependinfo.files = {""}
+--
+--     -- return new dependinfo (optional)
+--     return {files = {}, ..}
+--
+-- end, {dependfile = "/xx/xx",
+--       values = {compinst:program(), compflags},
+--       files = {sourcefile, ...}})
+--
+function on_changed(callback, opt)
+
+    -- get files
+    opt = opt or {}
+    assert(opt.files, "depend.on_changed(): please set files list!")
+
+    -- get dependfile
+    local dependfile = opt.dependfile
+    if not dependfile then
+        dependfile = project.tmpfile(table.concat(table.wrap(opt.files), ""))
+    end
+
+    -- load dependent info
+    local dependinfo = option.get("rebuild") and {} or (load(dependfile) or {})
+
+    -- need build this object?
+    -- @note we use mtime(dependfile) instead of mtime(objectfile) to ensure the object file is is fully compiled.
+    -- @see https://github.com/xmake-io/xmake/issues/748
+    if not is_changed(dependinfo, {lastmtime = opt.lastmtime or os.mtime(dependfile), values = opt.values}) then
+        return
+    end
+
+    -- do callback if changed and maybe files and values will be updated
+    dependinfo = callback() or {}
+
+    -- update files and values to the dependent file
+    dependinfo.files = dependinfo.files or {}
+    table.join2(dependinfo.files, opt.files)
+    if opt.values then
+        dependinfo.values = dependinfo.values or {}
+        table.join2(dependinfo.values, opt.values)
+    end
+    save(dependinfo, dependfile)
 end

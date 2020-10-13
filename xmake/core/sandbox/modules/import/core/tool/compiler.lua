@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -32,14 +32,10 @@ local sandbox  = require("sandbox/sandbox")
 
 -- load the compiler from the given source kind
 function sandbox_core_tool_compiler.load(sourcekind, opt)
-
-    -- get the compiler instance
     local instance, errors = compiler.load(sourcekind, opt and opt.target or nil)
     if not instance then
         raise(errors)
     end
-
-    -- ok
     return instance
 end
 
@@ -59,10 +55,10 @@ function sandbox_core_tool_compiler.compargv(sourcefiles, objectfile, opt)
     if not sourcekind and type(sourcefiles) == "string" then
         sourcekind = language.sourcekind_of(sourcefiles)
     end
- 
+
     -- get the compiler instance
     local instance = sandbox_core_tool_compiler.load(sourcekind, opt)
- 
+
     -- make arguments list
     return instance:compargv(sourcefiles, objectfile, opt)
 end
@@ -78,7 +74,7 @@ function sandbox_core_tool_compiler.compile(sourcefiles, objectfile, opt)
     if not sourcekind and type(sourcefiles) == "string" then
         sourcekind = language.sourcekind_of(sourcefiles)
     end
- 
+
     -- get the compiler instance
     local instance = sandbox_core_tool_compiler.load(sourcekind, opt)
 
@@ -92,7 +88,7 @@ end
 -- make compiling flags
 --
 -- @param sourcefiles   the source files
--- @param opt           the argument options (contain all the compiler attributes of target), 
+-- @param opt           the argument options (contain all the compiler attributes of target),
 --                      e.g. {target = ..., targetkind = "static", config = {cxflags = "", defines = "", includedirs = "", ...}}
 --
 -- @return              the flags list
@@ -166,10 +162,27 @@ function sandbox_core_tool_compiler.build(sourcefiles, targetfile, opt)
     end
 end
 
+-- get the current compiler name of given language kind
+--
+-- @param langkind      the language kind, e.g. c, cxx, mm, mxx, swift, go, rust, d, as
+--
+-- @return              the compiler name
+--
+function sandbox_core_tool_compiler.name(langkind, opt)
+
+    -- get sourcekind from the language kind
+    local sourcekind = language.langkinds()[langkind]
+    assert(sourcekind, "unknown language kind: " .. langkind)
+
+    -- get the compiler instance
+    local instance = sandbox_core_tool_compiler.load(sourcekind, opt)
+    return instance:name()
+end
+
 -- get all compiler features
 --
 -- @param langkind      the language kind, e.g. c, cxx, mm, mxx, swift, go, rust, d, as
--- @param opt           the argument options (contain all the compiler attributes of target), 
+-- @param opt           the argument options (contain all the compiler attributes of target),
 --                      e.g. {target = ..., targetkind = "static", cxflags = "", defines = "", includedirs = "", ...}
 --
 -- @return              the features
@@ -194,7 +207,7 @@ function sandbox_core_tool_compiler.features(langkind, opt)
         local flags = instance:compflags(opt)
 
         -- get features
-        local ok, results_or_errors = sandbox.load(sandbox_core_tool_compiler._features, instance:name(), {flags = flags, program = instance:program()})
+        local ok, results_or_errors = sandbox.load(sandbox_core_tool_compiler._features, instance:name(), {flags = flags, program = instance:program(), envs = instance:runenvs()})
         if not ok then
             raise(results_or_errors)
         end
@@ -210,17 +223,17 @@ end
 -- has the given features?
 --
 -- @param features      the features, e.g. {"c_static_assert", "cxx_constexpr"}
--- @param opt           the argument options (contain all the compiler attributes of target), 
+-- @param opt           the argument options (contain all the compiler attributes of target),
 --                      e.g. {target = ..., targetkind = "static", cxflags = "", defines = "", includedirs = "", ...}
 --
 -- @return              the supported features or nil
 --
 function sandbox_core_tool_compiler.has_features(features, opt)
- 
+
     -- import "lib.detect.has_features"
     sandbox_core_tool_compiler._has_features = sandbox_core_tool_compiler._has_features or import("lib.detect.has_features")
     if not sandbox_core_tool_compiler._has_features then
-        return 
+        return
     end
 
     -- init options
@@ -228,7 +241,7 @@ function sandbox_core_tool_compiler.has_features(features, opt)
 
     -- get the language kinds
     local langkinds = language.langkinds()
- 
+
     -- classify features by the source kind
     local features_by_kind = {}
     for _, feature in ipairs(table.wrap(features)) do
@@ -238,9 +251,9 @@ function sandbox_core_tool_compiler.has_features(features, opt)
         assert(langkind, "unknown language kind for the feature: %s", feature)
 
         -- get the sourcekind from the language kind
-        local sourcekind = langkinds[langkind] 
+        local sourcekind = langkinds[langkind]
         assert(sourcekind, "unknown language kind: " .. langkind)
-     
+
         -- add feature
         features_by_kind[sourcekind] = features_by_kind[sourcekind] or {}
         table.insert(features_by_kind[sourcekind], feature)
@@ -257,7 +270,7 @@ function sandbox_core_tool_compiler.has_features(features, opt)
         local flags = instance:compflags(opt)
 
         -- has features?
-        local ok, results_or_errors = sandbox.load(sandbox_core_tool_compiler._has_features, instance:name(), features, {flags = flags, program = instance:program()})
+        local ok, results_or_errors = sandbox.load(sandbox_core_tool_compiler._has_features, instance:name(), features, {flags = flags, program = instance:program(), envs = instance:runenvs()})
         if not ok then
             raise(results_or_errors)
         end
@@ -284,7 +297,7 @@ function sandbox_core_tool_compiler.has_flags(langkind, flags, opt)
 
     -- init options
     opt = opt or {}
-  
+
     -- get sourcekind from the language kind
     local sourcekind = language.langkinds()[langkind]
     assert(sourcekind, "unknown language kind: " .. langkind)

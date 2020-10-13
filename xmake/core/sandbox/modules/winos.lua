@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -33,6 +33,7 @@ sandbox_winos.console_cp        = winos.console_cp
 sandbox_winos.console_output_cp = winos.console_output_cp
 sandbox_winos.registry_query    = winos.registry_query
 sandbox_winos.logical_drives    = winos.logical_drives
+sandbox_winos.cmdargv           = winos.cmdargv
 
 -- get windows system version
 function sandbox_winos.version()

@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -31,24 +31,31 @@ platform("bsd")
     set_archs("i386", "x86_64")
 
     -- set formats
-    set_formats {static = "lib$(name).a", object = "$(name).o", shared = "lib$(name).so", symbol = "$(name).sym"}
+    set_formats("static", "lib$(name).a")
+    set_formats("object", "$(name).o")
+    set_formats("shared", "lib$(name).so")
+    set_formats("symbol", "$(name).sym")
 
     -- set install directory
     set_installdir("/usr/local")
 
-    -- on check project configuration
-    on_config_check("config")
+    -- on check
+    on_check(function (platform)
+        import("core.project.config")
+        local arch = config.get("arch")
+        if not arch then
+            config.set("arch", os.arch())
+            cprint("checking for architecture ... ${color.success}%s", config.get("arch"))
+        end
+    end)
 
-    -- on check global configuration
-    on_global_check("global")
-
-    -- on load
-    on_load("load")
+    -- set toolchains
+    set_toolchains("envs", "gcc", "clang", "yasm", "nasm", "fasm", "cuda", "dlang", "go", "rust", "gfortran", "zig")
 
     -- set menu
     set_menu {
-                config = 
-                {   
+                config =
+                {
                     {category = "Cuda SDK Configuration"                                            }
                 ,   {nil, "cuda",           "kv", "auto",       "The Cuda SDK Directory"            }
                 ,   {category = "Qt SDK Configuration"                                              }
@@ -56,8 +63,8 @@ platform("bsd")
                 ,   {nil, "qt_sdkver",      "kv", "auto",       "The Qt SDK Version"                }
                 }
 
-            ,   global = 
-                {   
+            ,   global =
+                {
                     {category = "Cuda SDK Configuration"                                            }
                 ,   {nil, "cuda",           "kv", "auto",       "The Cuda SDK Directory"            }
                 ,   {category = "Qt SDK Configuration"                                              }

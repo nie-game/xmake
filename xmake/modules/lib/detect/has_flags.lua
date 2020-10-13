@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -62,14 +62,14 @@ function main(name, flags, opt)
     opt.programver = tool.version
 
     -- get tool platform
-    local plat = config.get("plat") or os.host()
+    local plat = opt.plat or config.get("plat") or os.host()
 
     -- get tool architecture
     --
     -- some tools select arch by path environment, not be flags, e.g. cl.exe of msvc)
     -- so, it will affect the cache result
     --
-    local arch = config.get("arch") or os.arch()
+    local arch = opt.arch or config.get("arch") or os.arch()
 
     -- init cache key
     local key = plat .. "_" .. arch .. "_" .. tool.program .. "_" .. (tool.version or "") .. "_" .. (opt.toolkind or "") .. "_" .. (opt.flagkind or "") .. "_" .. table.concat(opt.sysflags, " ") .. "_" .. opt.flagskey
@@ -113,14 +113,14 @@ function main(name, flags, opt)
     if hasflags then
         result, errors = hasflags(checkflags, opt)
     else
-        result = try { function () os.runv(tool.program, checkflags); return true end, catch { function (errs) errors = errs end }}
+        result = try { function () os.runv(tool.program, checkflags, {envs = opt.envs}); return true end, catch { function (errs) errors = errs end }}
     end
     _g._checking = nil
     result = result or false
 
     -- trace
     if option.get("verbose") or option.get("diagnosis") or opt.verbose then
-        cprintf("${dim}checking for the flags (")
+        cprintf("${dim}checking for flags (")
         io.write(opt.flagskey)
         cprint("${dim}) ... %s", result and "${color.success}${text.success}" or "${color.nothing}${text.nothing}")
         if option.get("diagnosis") then

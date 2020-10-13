@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -22,6 +22,7 @@
 local sandbox_core_package_repository = sandbox_core_package_repository or {}
 
 -- load modules
+local global        = require("base/global")
 local project       = require("project/project")
 local repository    = require("package/repository")
 local raise         = require("sandbox/modules/raise")
@@ -72,7 +73,7 @@ function sandbox_core_package_repository.repositories(is_global)
 
     -- add main global xmake repository
     local repositories = {}
-    if is_global then
+    if is_global and global.get("network") ~= "private" then
 
         -- import fasturl
         import("net.fasturl")
@@ -91,8 +92,7 @@ function sandbox_core_package_repository.repositories(is_global)
         end
     end
 
-
-    -- load repositories from repository cache 
+    -- load repositories from repository cache
     for name, repoinfo in pairs(table.wrap(repository.repositories(is_global))) do
         local url = repoinfo
         local branch = nil

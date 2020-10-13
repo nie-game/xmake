@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -20,6 +20,7 @@
 
 -- imports
 import("core.base.option")
+import("private.utils.progress")
 
 -- init it
 function init(self)
@@ -68,8 +69,8 @@ end
 function nf_warning(self, level)
 
     -- the maps
-    local maps = 
-    {   
+    local maps =
+    {
         none       = "--less-pedantic"
     ,   less       = "--less-pedantic"
     ,   error      = "-Werror"
@@ -83,8 +84,8 @@ end
 function nf_optimize(self, level)
 
     -- the maps
-    local maps = 
-    {   
+    local maps =
+    {
         none       = ""
     ,   fast       = "--opt-code-speed"
     ,   faster     = "--opt-code-speed"
@@ -94,7 +95,7 @@ function nf_optimize(self, level)
     }
 
     -- make it
-    return maps[level] 
+    return maps[level]
 end
 
 -- make the language flag
@@ -102,7 +103,7 @@ function nf_language(self, stdname)
 
     -- the stdc maps
     if _g.cmaps == nil then
-        _g.cmaps = 
+        _g.cmaps =
         {
             -- stdc
             ansi        = "--std-c89"
@@ -165,12 +166,12 @@ function link(self, objectfiles, targetkind, targetfile, flags)
 end
 
 -- make the compile arguments list
-function _compargv1(self, sourcefile, objectfile, flags)
+function compargv(self, sourcefile, objectfile, flags)
     return self:program(), table.join("-c", flags, "-o", objectfile, sourcefile)
 end
 
 -- compile the source file
-function _compile1(self, sourcefile, objectfile, dependinfo, flags)
+function compile(self, sourcefile, objectfile, dependinfo, flags)
 
     -- ensure the object directory
     os.mkdir(path.directory(objectfile))
@@ -179,7 +180,7 @@ function _compile1(self, sourcefile, objectfile, dependinfo, flags)
     try
     {
         function ()
-            local outdata, errdata = os.iorunv(_compargv1(self, sourcefile, objectfile, flags))
+            local outdata, errdata = os.iorunv(compargv(self, sourcefile, objectfile, flags))
             return (outdata or "") .. (errdata or "")
         end,
         catch
@@ -215,30 +216,13 @@ function _compile1(self, sourcefile, objectfile, dependinfo, flags)
 
                 -- print some warnings
                 if warnings and #warnings > 0 and (option.get("verbose") or option.get("warning")) then
+                    if progress.showing_without_scroll() then
+                        print("")
+                    end
                     cprint("${color.warning}%s", table.concat(table.slice(warnings:split('\n'), 1, 8), '\n'))
                 end
             end
         }
     }
-end
-
--- make the compile arguments list
-function compargv(self, sourcefiles, objectfile, flags)
-
-    -- only support single source file now
-    assert(type(sourcefiles) ~= "table", "'object:sources' not support!")
-
-    -- for only single source file
-    return _compargv1(self, sourcefiles, objectfile, flags)
-end
-
--- compile the source file
-function compile(self, sourcefiles, objectfile, dependinfo, flags)
-
-    -- only support single source file now
-    assert(type(sourcefiles) ~= "table", "'object:sources' not support!")
-
-    -- for only single source file
-    _compile1(self, sourcefiles, objectfile, dependinfo, flags)
 end
 

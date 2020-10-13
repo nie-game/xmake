@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -28,7 +28,7 @@ language("swift")
     set_sourceflags {sc = "scflags"}
 
     -- set target kinds
-    set_targetkinds {binary = "sc-ld", static = "ar", shared = "sc-sh"}
+    set_targetkinds {binary = "scld", static = "ar", shared = "scsh"}
 
     -- set target flags
     set_targetflags {binary = "ldflags", static = "arflags", shared = "shflags"}
@@ -46,7 +46,7 @@ language("swift")
     on_load("load")
 
     -- set name flags
-    set_nameflags 
+    set_nameflags
     {
         object =
         {
@@ -75,11 +75,11 @@ language("swift")
         ,   "option.undefines_if_ok"
         ,   "option.frameworkdirs"
         ,   "option.frameworks"
-        ,   "platform.includedirs"
-        ,   "platform.defines"
-        ,   "platform.undefines"
-        ,   "platform.frameworkdirs"
-        ,   "platform.frameworks"
+        ,   "toolchain.includedirs"
+        ,   "toolchain.defines"
+        ,   "toolchain.undefines"
+        ,   "toolchain.frameworkdirs"
+        ,   "toolchain.frameworks"
         }
     ,   binary =
         {
@@ -95,21 +95,21 @@ language("swift")
         ,   "option.linkdirs"
         ,   "option.rpathdirs"
         ,   "option.frameworkdirs"
-        ,   "platform.linkdirs"
-        ,   "platform.rpathdirs"
-        ,   "platform.frameworkdirs"
+        ,   "toolchain.linkdirs"
+        ,   "toolchain.rpathdirs"
+        ,   "toolchain.frameworkdirs"
         ,   "config.links"
         ,   "target.links"
         ,   "option.links"
-        ,   "platform.links"
+        ,   "toolchain.links"
         ,   "config.frameworks"
         ,   "target.frameworks"
         ,   "option.frameworks"
-        ,   "platform.frameworks"
+        ,   "toolchain.frameworks"
         ,   "config.syslinks"
         ,   "target.syslinks"
         ,   "option.syslinks"
-        ,   "platform.syslinks"
+        ,   "toolchain.syslinks"
         }
     ,   shared =
         {
@@ -123,22 +123,22 @@ language("swift")
         ,   "option.symbols"
         ,   "option.linkdirs"
         ,   "option.frameworkdirs"
-        ,   "platform.linkdirs"
-        ,   "platform.frameworkdirs"
+        ,   "toolchain.linkdirs"
+        ,   "toolchain.frameworkdirs"
         ,   "config.links"
         ,   "target.links"
         ,   "option.links"
-        ,   "platform.links"
+        ,   "toolchain.links"
         ,   "config.frameworks"
         ,   "target.frameworks"
         ,   "option.frameworks"
-        ,   "platform.frameworks"
+        ,   "toolchain.frameworks"
         ,   "config.syslinks"
         ,   "target.syslinks"
         ,   "option.syslinks"
-        ,   "platform.syslinks"
+        ,   "toolchain.syslinks"
         }
-    ,   static = 
+    ,   static =
         {
             "target.strip"
         ,   "target.symbols"
@@ -147,14 +147,14 @@ language("swift")
 
     -- set menu
     set_menu {
-                config = 
+                config =
                 {
                     {category = "Cross Complation Configuration/Compiler Configuration"                              }
                 ,   { nil, "sc",            "kv", nil,          "The Swift Compiler"                                 }
 
                 ,   {category = "Cross Complation Configuration/Linker Configuration"                                }
-                ,   { nil, "sc-ld",         "kv", nil,          "The Swift Linker"                                   }
-                ,   { nil, "sc-sh",         "kv", nil,          "The Swift Shared Library Linker"                    }
+                ,   { nil, "scld",         "kv", nil,          "The Swift Linker"                                   }
+                ,   { nil, "scsh",         "kv", nil,          "The Swift Shared Library Linker"                    }
 
                 ,   { category = "Cross Complation Configuration/Builtin Flags Configuration"                        }
                 ,   { nil, "links",         "kv", nil,          "The Link Libraries"                                 }
@@ -164,7 +164,7 @@ language("swift")
                 ,   { nil, "frameworks",    "kv", nil,          "The Frameworks"                                     }
                 ,   { nil, "frameworkdirs", "kv", nil,          "The Frameworks Search Directories"                  }
                 }
-            } 
+            }
 
 
 

@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -38,11 +38,11 @@ rule("wdk.inf")
 
         -- get wdk
         local wdk = target:data("wdk")
-        
+
         -- get stampinf
         local stampinf = path.join(wdk.bindir, wdk.sdkver, arch, is_host("windows") and "stampinf.exe" or "stampinf")
         assert(stampinf and os.isexec(stampinf), "stampinf not found!")
-        
+
         -- save uic
         target:data_set("wdk.stampinf", stampinf)
     end)
@@ -54,6 +54,7 @@ rule("wdk.inf")
         import("core.base.option")
         import("core.theme.theme")
         import("core.project.depend")
+        import("private.utils.progress")
 
         -- the target file
         local targetfile = path.join(target:targetdir(), path.basename(sourcefile) .. ".inf")
@@ -84,16 +85,11 @@ rule("wdk.inf")
         local dependfile = target:dependfile(targetfile)
         local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
         if not depend.is_changed(dependinfo, {lastmtime = os.mtime(targetfile), values = args}) then
-            return 
+            return
         end
 
         -- trace progress info
-        cprintf("${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} ", opt.progress)
-        if option.get("verbose") then
-            cprint("${dim color.build.object}compiling.wdk.inf %s", sourcefile)
-        else
-            cprint("${color.build.object}compiling.wdk.inf %s", sourcefile)
-        end
+        progress.show(opt.progress, "${color.build.object}compiling.wdk.inf %s", sourcefile)
 
         -- get stampinf
         local stampinf = target:data("wdk.stampinf")

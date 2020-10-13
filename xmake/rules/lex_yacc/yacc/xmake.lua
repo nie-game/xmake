@@ -11,14 +11,14 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
 -- @file        xmake.lua
 --
 
--- define rule: yacc 
+-- define rule: yacc
 rule("yacc")
 
     -- set extension
@@ -33,9 +33,9 @@ rule("yacc")
             yacc = find_tool("bison") or find_tool("yacc")
             if yacc and yacc.program then
                 config.set("__yacc", yacc.program)
-                cprint("checking for the Yacc ... ${color.success}%s", yacc.program)
+                cprint("checking for Yacc ... ${color.success}%s", yacc.program)
             else
-                cprint("checking for the Yacc ... ${color.nothing}${text.nothing}")
+                cprint("checking for Yacc ... ${color.nothing}${text.nothing}")
                 raise("yacc/bison not found!")
             end
         end
@@ -50,6 +50,7 @@ rule("yacc")
         import("core.project.config")
         import("core.project.depend")
         import("core.tool.compiler")
+        import("private.utils.progress")
 
         -- get yacc
         local yacc = assert(config.get("__yacc"), "yacc not found!")
@@ -64,7 +65,7 @@ rule("yacc")
         -- get object file
         local objectfile = target:objectfile(sourcefile_cx)
 
-        -- load compiler 
+        -- load compiler
         local compinst = compiler.load((extension == ".yy" and "cxx" or "cc"), {target = target})
 
         -- get compile flags
@@ -73,30 +74,25 @@ rule("yacc")
         -- add objectfile
         table.insert(target:objectfiles(), objectfile)
 
-        -- load dependent info 
+        -- load dependent info
         local dependfile = target:dependfile(objectfile)
         local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
 
         -- need build this object?
         local depvalues = {compinst:program(), compflags}
         if not depend.is_changed(dependinfo, {lastmtime = os.mtime(objectfile), values = depvalues}) then
-            return 
+            return
         end
 
         -- trace progress info
-        cprintf("${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} ", opt.progress)
-        if option.get("verbose") then
-            cprint("${dim color.build.object}compiling.yacc %s", sourcefile_yacc)
-        else
-            cprint("${color.build.object}compiling.yacc %s", sourcefile_yacc)
-        end
+        progress.show(opt.progress, "${color.build.object}compiling.yacc %s", sourcefile_yacc)
 
         -- ensure the source file directory
         if not os.isdir(sourcefile_dir) then
             os.mkdir(sourcefile_dir)
         end
 
-        -- compile yacc 
+        -- compile yacc
         os.vrunv(yacc, {"-d", "-o", sourcefile_cx, sourcefile_yacc})
 
         -- trace

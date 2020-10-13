@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -41,10 +41,13 @@ local requireinfo           = require("project/requireinfo")
 local deprecated_project    = require("project/deprecated/project")
 local package               = require("package/package")
 local platform              = require("platform/platform")
-local environment           = require("platform/environment")
+local toolchain             = require("tool/toolchain")
 local language              = require("language/language")
 local sandbox_os            = require("sandbox/modules/os")
 local sandbox_module        = require("sandbox/modules/import/core/sandbox/module")
+
+-- register project to platform
+platform._PROJECT = project
 
 -- the current os is belong to the given os?
 function project._api_is_os(interp, ...)
@@ -89,16 +92,6 @@ function project._api_is_kind(interp, ...)
             return true
         end
     end
-end
-
--- the current host is belong to the given hosts?
-function project._api_is_host(interp, ...)
-    return os.is_host(...)
-end
-
--- the current subsystem host is belong to the given hosts?
-function project._api_is_subhost(interp, ...)
-    return os.is_subhost(...)
 end
 
 -- the current config is belong to the given config values?
@@ -172,7 +165,7 @@ function project._load(force, disable_filter)
     local interp = project.interpreter()
 
     -- load script
-    local ok, errors = interp:load(project.rootfile(), {on_load_data = function (data) 
+    local ok, errors = interp:load(project.rootfile(), {on_load_data = function (data)
             local xmakerc_file = project.rcfile()
             if xmakerc_file and os.isfile(xmakerc_file) then
                 local rcdata = io.readfile(xmakerc_file)
@@ -186,14 +179,14 @@ function project._load(force, disable_filter)
         return false, (errors or "load project file failed!")
     end
 
-    -- load the root info of the project 
-    local rootinfo, errors = project._load_scope("root", true, not disable_filter) 
+    -- load the root info of the project
+    local rootinfo, errors = project._load_scope("root", true, not disable_filter)
     if not rootinfo then
         return false, errors
     end
 
     -- load the root info of the target
-    local rootinfo_target, errors = project._load_scope("root.target", true, not disable_filter) 
+    local rootinfo_target, errors = project._load_scope("root.target", true, not disable_filter)
     if not rootinfo_target then
         return false, errors
     end
@@ -214,7 +207,7 @@ end
 
 -- load deps for instance: e.g. option, target and rule
 --
--- e.g. 
+-- e.g.
 --
 -- a.deps = b
 -- b.deps = c
@@ -230,7 +223,7 @@ function project._load_deps(instance, instances, deps, orderdeps)
             project._load_deps(depinst, instances, deps, orderdeps)
             if not deps[dep] then
                 deps[dep] = depinst
-                table.insert(orderdeps, depinst) 
+                table.insert(orderdeps, depinst)
             end
         end
     end
@@ -251,7 +244,7 @@ function project._load_scope(scope_kind, remove_repeat, enable_filter)
     -- load scope
     local results, errors = interp:make(scope_kind, remove_repeat, enable_filter)
     if not results then
-        return nil, errors 
+        return nil, errors
     end
 
     -- leave the project directory
@@ -264,7 +257,7 @@ end
 
 -- load tasks
 function project._load_tasks()
- 
+
     -- the project file is not found?
     if not os.isfile(project.rootfile()) then
         return {}, nil
@@ -304,7 +297,7 @@ function project._load_rules()
     if not ok then
         return nil, errors
     end
- 
+
     -- load the rules from the the project file
     local results, errors = project._load_scope("rule", true, true)
     if not results then
@@ -327,7 +320,30 @@ function project._load_rules()
     return rules
 end
 
--- load targets 
+-- load toolchains
+function project._load_toolchains()
+
+    -- load the project file first if has not been loaded?
+    local ok, errors = project._load()
+    if not ok then
+        return nil, errors
+    end
+
+    -- load the toolchain from the the project file
+    local results, errors = project._load_scope("toolchain", true, true)
+    if not results then
+        return nil, errors
+    end
+
+    -- make toolchain instances
+    local toolchains = {}
+    for toolchain_name, toolchain_info in pairs(results) do
+        toolchains[toolchain_name] = toolchain.new(toolchain_name, toolchain_info)
+    end
+    return toolchains
+end
+
+-- load targets
 function project._load_targets()
 
     -- load all requires first and reload the project file to ensure has_package() works for targets
@@ -362,7 +378,7 @@ function project._load_targets()
 
         -- load rules from target and language
         --
-        -- e.g. 
+        -- e.g.
         --
         -- a.deps = b
         -- b.deps = c
@@ -393,7 +409,7 @@ function project._load_targets()
                     local name = deprule:name()
                     if not t._RULES[name] then
                         t._RULES[name] = deprule
-                        table.insert(t._ORDERULES, deprule) 
+                        table.insert(t._ORDERULES, deprule)
                     end
                 end
                 table.insert(t._ORDERULES, r)
@@ -402,7 +418,7 @@ function project._load_targets()
             end
         end
 
-        -- laod packages
+        -- load packages
         t._PACKAGES = t._PACKAGES or {}
         for _, packagename in ipairs(table.wrap(t:get("packages"))) do
             local p = requires[packagename]
@@ -410,30 +426,46 @@ function project._load_targets()
                 table.insert(t._PACKAGES, p)
             end
         end
+
+        -- load toolchains
+        local toolchains = t:get("toolchains")
+        if toolchains then
+            t._TOOLCHAINS = {}
+            for _, name in ipairs(table.wrap(toolchains)) do
+                local toolchain_inst, errors = toolchain.load(name, t:extraconf("toolchains", name))
+                -- attempt to load toolchain from project
+                if not toolchain_inst then
+                    toolchain_inst = project.toolchain(name)
+                end
+                if not toolchain_inst then
+                    return nil, errors
+                end
+                table.insert(t._TOOLCHAINS, toolchain_inst)
+            end
+        end
     end
 
-    -- enter toolchains environment
-    environment.enter("toolchains")
+    -- sort targets for all deps
+    local targetrefs = {}
+    local ordertargets = {}
+    for _, t in pairs(targets) do
+        project._sort_targets(targets, ordertargets, targetrefs, t)
+    end
 
     -- do load for each target
     local ok = false
-    for _, t in pairs(targets) do
+    for _, t in ipairs(ordertargets) do
         ok, errors = t:_load()
         if not ok then
             break
         end
     end
 
-    -- leave toolchains environment
-    environment.leave("toolchains")
-
     -- do load failed?
     if not ok then
-        return nil, errors
+        return nil, nil, errors
     end
-
-    -- ok
-    return targets
+    return targets, ordertargets
 end
 
 -- load options
@@ -504,7 +536,7 @@ function project._load_options(disable_filter)
 
         -- init an option instance
         local instance = option.new(optionname, optioninfo)
-      
+
         -- save it
         options[optionname] = instance
 
@@ -533,7 +565,7 @@ function project._load_requires()
 
     -- parse requires
     local requires = {}
-    local requires_str, requires_extra = project.requires_str() 
+    local requires_str, requires_extra = project.requires_str()
     requires_extra = requires_extra or {}
     for _, requirestr in ipairs(table.wrap(requires_str)) do
 
@@ -547,7 +579,7 @@ function project._load_requires()
             alias = extrainfo.alias
         end
 
-        -- load it from cache first (@note will discard scripts in extrainfo) 
+        -- load it from cache first (@note will discard scripts in extrainfo)
         local instance = requireinfo.load(alias or packagename)
         if not instance then
 
@@ -559,7 +591,7 @@ function project._load_requires()
             instance._INFO = { __requirestr = requirestr, __extrainfo = extrainfo }
         end
 
-        -- move scripts of extrainfo  (e.g. on_load ..) 
+        -- move scripts of extrainfo  (e.g. on_load ..)
         if extrainfo then
             for k, v in pairs(extrainfo) do
                 if type(v) == "function" then
@@ -578,8 +610,6 @@ function project._load_requires()
         -- add require info
         requires[alias or packagename] = instance
     end
-
-    -- ok?
     return requires
 end
 
@@ -591,9 +621,23 @@ function project._load_packages()
     if not ok then
         return nil, errors
     end
- 
+
     -- load packages
     return project._load_scope("package", true, false)
+end
+
+-- sort targets for all deps
+function project._sort_targets(targets, ordertargets, targetrefs, target)
+    for _, depname in ipairs(table.wrap(target:get("deps"))) do
+        local targetinst = targets[depname]
+        if targetinst then
+            project._sort_targets(targets, ordertargets, targetrefs, targetinst)
+        end
+    end
+    if not targetrefs[target:name()] then
+        targetrefs[target:name()] = true
+        table.insert(ordertargets, target)
+    end
 end
 
 -- get project apis
@@ -611,7 +655,7 @@ function project.apis()
         ,   "add_requires"
         ,   "add_repositories"
         }
-    ,   pathes = 
+    ,   paths =
         {
             -- add_xxx
             "add_packagedirs"
@@ -620,14 +664,12 @@ function project.apis()
         {
             "set_config"
         }
-    ,   custom = 
+    ,   custom =
         {
             -- is_xxx
             {"is_os",                   project._api_is_os            }
         ,   {"is_kind",                 project._api_is_kind          }
         ,   {"is_arch",                 project._api_is_arch          }
-        ,   {"is_host",                 project._api_is_host          }
-        ,   {"is_subhost",              project._api_is_subhost       }
         ,   {"is_mode",                 project._api_is_mode          }
         ,   {"is_plat",                 project._api_is_plat          }
         ,   {"is_config",               project._api_is_config        }
@@ -680,6 +722,9 @@ function project.interpreter()
     -- define apis for language
     interp:api_define(language.apis())
 
+    -- define apis for toolchain
+    interp:api_define(toolchain.apis())
+
     -- define apis for project
     interp:api_define(project.apis())
 
@@ -699,10 +744,10 @@ function project.interpreter()
 
         -- attempt to get it directly from the configure
         local result = config.get(variable)
-        if not result or type(result) ~= "string" then 
+        if not result or type(result) ~= "string" then
 
             -- init maps
-            local maps = 
+            local maps =
             {
                 os          = platform.os()
             ,   host        = os.host()
@@ -780,12 +825,13 @@ end
 
 -- get the filelock of the whole project directory
 function project.filelock()
+    local errors
     local filelock = project._FILELOCK
     if filelock == nil then
-        filelock = io.openlock(path.join(config.directory(), "project.lock"))
-        project._FILELOCK = filelock 
+        filelock, errors = io.openlock(path.join(config.directory(), "project.lock"))
+        project._FILELOCK = filelock
     end
-    return filelock
+    return filelock, errors
 end
 
 -- get the project info from the given name
@@ -845,20 +891,26 @@ function project.target(name)
     return project.targets()[name]
 end
 
--- get the current configure for targets
+-- get targets
 function project.targets()
-
-    -- load targets
     if not project._TARGETS then
-        local targets, errors = project._load_targets()
-        if not targets then
+        local targets, ordertargets, errors = project._load_targets()
+        if not targets or not ordertargets then
             os.raise(errors)
         end
         project._TARGETS = targets
+        project._ORDERTARGETS = ordertargets
     end
-
-    -- ok
     return project._TARGETS
+end
+
+-- get order targets
+function project.ordertargets()
+    if not project._ORDERTARGETS then
+        -- ensure _ORDERTARGETS to be initialized
+        project.targets()
+    end
+    return project._ORDERTARGETS
 end
 
 -- get the given option
@@ -899,7 +951,7 @@ function project.requires()
     return project._REQUIRES
 end
 
--- get string requires 
+-- get string requires
 function project.requires_str()
     if not project._REQUIRES_STR then
 
@@ -924,10 +976,7 @@ end
 
 -- get project rules
 function project.rules()
-
     if not project._RULES then
-
-        -- load rules
         local rules, errors = project._load_rules()
         if not rules then
             os.raise(errors)
@@ -935,6 +984,23 @@ function project.rules()
         project._RULES = rules
     end
     return project._RULES
+end
+
+-- get the given toolchain
+function project.toolchain(name)
+    return project.toolchains()[name]
+end
+
+-- get project toolchains
+function project.toolchains()
+    if not project._TOOLCHAINS then
+        local toolchains, errors = project._load_toolchains()
+        if not toolchains then
+            os.raise(errors)
+        end
+        project._TOOLCHAINS = toolchains
+    end
+    return project._TOOLCHAINS
 end
 
 -- get the given task
@@ -1054,7 +1120,7 @@ function project.menu()
 
                     -- define menu option
                     local menu_options = {nil, longname, "kv", default, descriptions}
-                        
+
                     -- handle set_description("xx", "xx")
                     if type(descriptions) == "table" then
                         for i, description in ipairs(descriptions) do
@@ -1070,9 +1136,41 @@ function project.menu()
             end
         end
     end
-
-    -- ok?
     return menu
+end
+
+-- get the temporary directory of project
+function project.tmpdir(opt)
+
+    local tmpdir = project._TMPDIR
+    if not tmpdir then
+        if os.isdir(config.directory()) then
+            local tmpdir_root = path.join(config.directory(), "tmp")
+            tmpdir = path.join(tmpdir_root, os.date("%y%m%d"))
+            if not os.isdir(tmpdir) then
+                os.mkdir(tmpdir)
+            end
+        else
+            tmpdir = os.tmpdir()
+        end
+    end
+    return tmpdir
+end
+
+-- generate the temporary file path of project
+--
+-- e.g.
+-- project.tmpfile("key")
+-- project.tmpfile({key = "xxx"})
+--
+function project.tmpfile(opt_or_key)
+    local opt
+    local key = opt_or_key
+    if type(key) == "table" then
+        key = opt_or_key.key
+        opt = opt_or_key
+    end
+    return path.join(project.tmpdir(opt), "_" .. (hash.uuid4(key):gsub("-", "")))
 end
 
 -- return module: project

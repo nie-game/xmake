@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -112,7 +112,7 @@ function path.envsep()
 end
 
 -- split environment variable with `path.envsep()`,
--- also handles more speical cases such as posix flags and windows quoted pathes
+-- also handles more speical cases such as posix flags and windows quoted paths
 function path.splitenv(env_path)
     local result = {}
     if xmake._HOST == "windows" then
@@ -149,7 +149,7 @@ function path.splitenv(env_path)
 end
 
 -- concat environment variable with `path.envsep()`,
--- also handles more speical cases such as posix flags and windows quoted pathes
+-- also handles more speical cases such as posix flags and windows quoted paths
 function path.joinenv(env_table)
 
     -- check

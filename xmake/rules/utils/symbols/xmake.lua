@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -21,10 +21,15 @@
 -- define rule: utils.symbols.extract
 rule("utils.symbols.extract")
     before_link(function(target)
+
+        -- imports
+        import("core.platform.platform")
+
         -- need generate symbols?
         local strip = target:get("strip")
         local targetkind = target:targetkind()
-        if target:get("symbols") == "debug" and (strip == "all" or strip == "debug") and (targetkind == "binary" or targetkind == "shared") then
+        if target:get("symbols") == "debug" and (strip == "all" or strip == "debug")
+            and (targetkind == "binary" or targetkind == "shared") and platform.tool("strip") then -- only for strip command
             target:data_set("utils.symbols.extract", true)
             target:set("strip", "none") -- disable strip in link stage, because we need to run separate strip commands
         end
@@ -41,13 +46,14 @@ rule("utils.symbols.extract")
         import("core.theme.theme")
         import("core.project.depend")
         import("core.platform.platform")
+        import("private.utils.progress")
 
         -- get strip
         local strip = platform.tool("strip")
         if not strip then
             return
         end
-            
+
         -- get dsymutil
         local dsymutil
         if is_plat("macosx", "iphoneos", "watchos") then
@@ -63,16 +69,11 @@ rule("utils.symbols.extract")
         local dependfile = target:dependfile(symbolfile)
         local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
         if not depend.is_changed(dependinfo, {lastmtime = os.mtime(dependfile)}) then
-            return 
+            return
         end
 
         -- trace progress info
-        local progress_prefix = "${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} "
-        if option.get("verbose") then
-            cprint(progress_prefix .. "${dim color.build.target}generating.$(mode) %s", opt.progress, path.filename(symbolfile))
-        else
-            cprint(progress_prefix .. "${color.build.target}generating.$(mode) %s", opt.progress, path.filename(symbolfile))
-        end
+        progress.show(opt.progress, "${color.build.target}generating.$(mode) %s", path.filename(symbolfile))
 
         -- we remove the previous symbol file to ensure that it will be re-generated and it's mtime will be changed.
         local dryrun = option.get("dry-run")
@@ -99,7 +100,7 @@ rule("utils.symbols.extract")
         -- strip it
         local strip_argv = {}
         if is_plat("macosx", "iphoneos", "watchos") then
-            -- do not support `-s`, we can only strip debug symbols 
+            -- do not support `-s`, we can only strip debug symbols
             local arch = get_config("arch")
             if arch then
                 table.insert(strip_argv, "-arch")

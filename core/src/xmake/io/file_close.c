@@ -41,7 +41,7 @@ tb_int_t xm_io_file_close(lua_State* lua)
     tb_assert_and_check_return_val(lua, 0);
 
     // is user data?
-    if (!lua_isuserdata(lua, 1)) 
+    if (!lua_isuserdata(lua, 1))
         xm_io_return_error(lua, "close(invalid file)!");
 
     // get file
@@ -81,13 +81,25 @@ tb_int_t xm_io_file_close(lua_State* lua)
         tb_buffer_exit(&file->rcache);
         tb_buffer_exit(&file->wcache);
 
-        // exit file
-        tb_free(file);
+        // gc will free it if no any refs for lua_newuserdata()
+        // ...
 
         // ok
         lua_pushboolean(lua, tb_true);
         return 1;
     }
-    else xm_io_return_error(lua, "cannot close this file!");
+    else // for stdfile (gc/close)
+    {
+        // exit the line cache buffer
+        tb_buffer_exit(&file->rcache);
+        tb_buffer_exit(&file->wcache);
+
+        // gc will free it if no any refs for lua_newuserdata()
+        // ...
+
+        // ok
+        lua_pushboolean(lua, tb_true);
+        return 1;
+    }
 }
 

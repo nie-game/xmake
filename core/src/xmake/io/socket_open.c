@@ -42,14 +42,14 @@ tb_int_t xm_io_socket_open(lua_State* lua)
     // check
     tb_assert_and_check_return_val(lua, 0);
 
-    // get socket type 
+    // get socket type
     tb_size_t socktype = (tb_size_t)luaL_checknumber(lua, 1);
 
-    // get address family 
+    // get address family
     tb_size_t family = (tb_size_t)luaL_checknumber(lua, 2);
 
     // map socket type
-    switch (socktype) 
+    switch (socktype)
     {
     case 2:
         socktype = TB_SOCKET_TYPE_UDP;
@@ -64,7 +64,7 @@ tb_int_t xm_io_socket_open(lua_State* lua)
 
     // init socket
     tb_socket_ref_t sock = tb_socket_init(socktype, family);
-    if (sock) lua_pushlightuserdata(lua, (tb_pointer_t)sock);
+    if (sock) xm_lua_pushpointer(lua, (tb_pointer_t)sock);
     else lua_pushnil(lua);
     return 1;
 }

@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -40,20 +40,27 @@ function compiler:_language()
     return self._LANGUAGE
 end
 
--- add flags from the platform 
-function compiler:_add_flags_from_platform(flags, targetkind)
+-- add flags from the toolchains
+function compiler:_add_flags_from_toolchains(flags, targetkind, target)
 
     -- add flags for platform with the given target kind, e.g. binary.gcc.cxflags or binary.cxflags
     if targetkind then
         local toolname = self:name()
-        for _, flagkind in ipairs(self:_flagkinds()) do
-            local toolflags = platform.get(targetkind .. '.' .. toolname .. '.' .. flagkind)
-            table.join2(flags, toolflags or platform.get(targetkind .. '.' .. flagkind))
+        if target and target:type() == "target" then
+            for _, flagkind in ipairs(self:_flagkinds()) do
+                local toolflags = target:toolconfig(targetkind .. '.' .. toolname .. '.' .. flagkind)
+                table.join2(flags, toolflags or target:toolconfig(targetkind .. '.' .. flagkind))
+            end
+        else
+            for _, flagkind in ipairs(self:_flagkinds()) do
+                local toolflags = platform.toolconfig(targetkind .. '.' .. toolname .. '.' .. flagkind)
+                table.join2(flags, toolflags or platform.toolconfig(targetkind .. '.' .. flagkind))
+            end
         end
     end
 end
 
--- add flags from the compiler 
+-- add flags from the compiler
 function compiler:_add_flags_from_compiler(flags, targetkind)
     for _, flagkind in ipairs(self:_flagkinds()) do
 
@@ -71,26 +78,20 @@ end
 function compiler._load_tool(sourcekind, target)
 
     -- get program from target
-    local program = nil
-    if target then
-        program = target:get("toolchain." .. sourcekind)
-        if not program then
-            local tools = target:get("tools") -- TODO: deprecated
-            if tools then
-                program = tools[sourcekind]
-            end
-        end
+    local program, toolname, toolchain_info
+    if target and target:type() == "target" then
+        program, toolname, toolchain_info = target:tool(sourcekind)
     end
 
     -- load the compiler tool from the source kind
-    local result, errors = tool.load(sourcekind, program)
-    if not result then 
+    local result, errors = tool.load(sourcekind, {program = program, toolname = toolname, toolchain_info = toolchain_info})
+    if not result then
         return nil, errors
     end
 
     -- done
     return result, program
-end 
+end
 
 -- load the compiler from the given source kind
 function compiler.load(sourcekind, target)
@@ -115,10 +116,10 @@ function compiler.load(sourcekind, target)
 
     -- save the compiler tool
     instance._TOOL = compiler_tool
-        
+
     -- load the compiler language from the source kind
     local result, errors = language.load_sk(sourcekind)
-    if not result then 
+    if not result then
         return nil, errors
     end
     instance._LANGUAGE = result
@@ -135,15 +136,17 @@ function compiler.load(sourcekind, target)
     -- save this instance
     compiler._INSTANCES[cachekey] = instance
 
-    -- add platform flags to the compiler tool
+    -- add toolchains flags to the compiler tool, e.g. gcc.cxflags or cxflags
     local toolname = compiler_tool:name()
-    for _, flagkind in ipairs(instance:_flagkinds()) do
-
-        -- add flags for platform, e.g. gcc.cxflags or cxflags
-        compiler_tool:add(flagkind, platform.get(toolname .. '.' .. flagkind) or platform.get(flagkind))
+    if target and target:type() == "target" then
+        for _, flagkind in ipairs(instance:_flagkinds()) do
+            compiler_tool:add(flagkind, target:toolconfig(toolname .. '.' .. flagkind) or target:toolconfig(flagkind))
+        end
+    else
+        for _, flagkind in ipairs(instance:_flagkinds()) do
+            compiler_tool:add(flagkind, platform.toolconfig(toolname .. '.' .. flagkind) or platform.toolconfig(flagkind))
+        end
     end
-
-    -- ok
     return instance
 end
 
@@ -163,7 +166,7 @@ function compiler:build(sourcefiles, targetfile, opt)
         compflags = self:compflags(opt)
     end
 
-    -- make flags 
+    -- make flags
     local flags = compflags
     if opt.target then
         flags = table.join(flags, opt.target:linkflags())
@@ -195,7 +198,7 @@ function compiler:buildargv(sourcefiles, targetfile, opt)
         compflags = self:compflags(opt)
     end
 
-    -- make flags 
+    -- make flags
     local flags = compflags
     if opt.target then
         flags = table.join(flags, opt.target:linkflags())
@@ -233,7 +236,7 @@ function compiler:compile(sourcefiles, objectfile, opt)
     end
 
     -- compile it
-    return sandbox.load(self:_tool().compile, self:_tool(), sourcefiles, objectfile, opt.dependinfo, compflags)
+    return sandbox.load(self:_tool().compile, self:_tool(), sourcefiles, objectfile, opt.dependinfo, compflags, opt)
 end
 
 -- get the compile arguments list
@@ -251,7 +254,7 @@ function compiler:compargv(sourcefiles, objectfile, opt)
         end
         compflags = self:compflags(opt)
     end
-    return self:_tool():compargv(sourcefiles, objectfile, compflags)
+    return self:_tool():compargv(sourcefiles, objectfile, compflags, opt)
 end
 
 -- get the compile command
@@ -271,13 +274,13 @@ function builder:_add_flags_from_fileconfig(flags, target, sourcefile, fileconfi
         end
     end
 
-    -- add flags from the common argument option 
+    -- add flags from the common argument option
     self:_add_flags_from_argument(flags, target, fileconfig)
 end
 
 -- get the compling flags
 --
--- @param opt   the argument options (contain all the compiler attributes of target), 
+-- @param opt   the argument options (contain all the compiler attributes of target),
 --              e.g.
 --              {target = ..., targetkind = "static", configs = {defines = "", cxflags = "", includedirs = ""}}
 --
@@ -297,14 +300,24 @@ function compiler:compflags(opt)
         targetkind = target:targetkind()
     end
 
-    -- add flags from the configure 
+    -- add flags from compiler/toolchains
+    --
+    -- we need to add toolchain flags at the beginning to allow users to override them.
+    -- but includedirs/links/syslinks/linkdirs will still be placed last, they are in the order defined in languages/xmake.lua
+    --
+    -- @see https://github.com/xmake-io/xmake/issues/978
+    --
     local flags = {}
+    self:_add_flags_from_compiler(flags, targetkind)
+    self:_add_flags_from_toolchains(flags, targetkind, target)
+
+    -- add flags from user configuration
     self:_add_flags_from_config(flags)
 
-    -- add flags for the target
+    -- add flags from target
     self:_add_flags_from_target(flags, target)
 
-    -- add flags for the source file
+    -- add flags from source file configuration
     if opt.sourcefile and target and target.fileconfig then
         local fileconfig = target:fileconfig(opt.sourcefile)
         if fileconfig then
@@ -312,17 +325,11 @@ function compiler:compflags(opt)
         end
     end
 
-    -- add flags for the argument
+    -- add flags from argument
     local configs = opt.configs or opt.config
     if configs then
         self:_add_flags_from_argument(flags, target, configs)
     end
-
-    -- add flags from the platform 
-    self:_add_flags_from_platform(flags, targetkind)
-
-    -- add flags from the compiler 
-    self:_add_flags_from_compiler(flags, targetkind)
 
     -- preprocess flags
     return self:_preprocess_flags(flags)

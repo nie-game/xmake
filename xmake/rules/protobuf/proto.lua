@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -25,6 +25,7 @@ import("core.project.config")
 import("core.project.depend")
 import("core.tool.compiler")
 import("lib.detect.find_tool")
+import("private.utils.progress")
 
 -- build protobuf file
 function main(target, sourcekind, sourcefile_proto, opt)
@@ -41,7 +42,7 @@ function main(target, sourcekind, sourcefile_proto, opt)
     -- find protoc-c
     local protoc_c = target:data("protobuf.protoc-c")
     if not protoc_c and sourcekind == "cc" then
-        protoc_c = find_tool("protoc-c") or protoc 
+        protoc_c = find_tool("protoc-c") or protoc
         if protoc_c and protoc_c.program then
             target:data_set("protobuf.protoc-c", protoc_c.program)
         end
@@ -51,8 +52,15 @@ function main(target, sourcekind, sourcefile_proto, opt)
     protoc = assert(target:data(sourcekind == "cxx" and "protobuf.protoc" or "protobuf.protoc-c"), "protoc not found!")
 
     -- get c/c++ source file for protobuf
-    local sourcefile_cx = path.join(target:autogendir(), "rules", "protobuf", path.basename(sourcefile_proto) .. ".pb" .. (sourcekind == "cxx" and ".cc" or "-c.c"))
-    local sourcefile_dir = path.directory(sourcefile_cx)
+    local prefixdir
+    local fileconfig = target:fileconfig(sourcefile_proto)
+    if fileconfig then
+        prefixdir = fileconfig.proto_rootdir
+    end
+    local rootdir = path.join(target:autogendir(), "rules", "protobuf")
+    local filename = path.basename(sourcefile_proto) .. ".pb" .. (sourcekind == "cxx" and ".cc" or "-c.c")
+    local sourcefile_cx = target:autogenfile(sourcefile_proto, {rootdir = rootdir, filename = filename})
+    local sourcefile_dir = prefixdir and path.join(rootdir, prefixdir) or path.directory(sourcefile_cx)
 
     -- add includedirs
     target:add("includedirs", sourcefile_dir)
@@ -60,7 +68,7 @@ function main(target, sourcekind, sourcefile_proto, opt)
     -- get object file
     local objectfile = target:objectfile(sourcefile_cx)
 
-    -- load compiler 
+    -- load compiler
     local compinst = compiler.load(sourcekind, {target = target})
 
     -- get compile flags
@@ -73,31 +81,35 @@ function main(target, sourcekind, sourcefile_proto, opt)
     -- add objectfile
     table.insert(target:objectfiles(), objectfile)
 
-    -- load dependent info 
+    -- load dependent info
     local dependfile = target:dependfile(objectfile)
     local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
 
     -- need build this object?
     local depvalues = {compinst:program(), compflags}
     if not depend.is_changed(dependinfo, {lastmtime = os.mtime(objectfile), values = depvalues}) then
-        return 
+        return
     end
 
     -- trace progress info
-    cprintf("${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} ", opt.progress)
-    if option.get("verbose") then
-        cprint("${dim color.build.object}compiling.proto %s", sourcefile_proto)
-    else
-        cprint("${color.build.object}compiling.proto %s", sourcefile_proto)
-    end
+    progress.show(opt.progress, "${color.build.object}compiling.proto %s", sourcefile_proto)
 
     -- ensure the source file directory
     if not os.isdir(sourcefile_dir) then
         os.mkdir(sourcefile_dir)
     end
 
-    -- compile protobuf 
-    os.vrunv(protoc, {sourcefile_proto, "-I" .. os.args(path.directory(sourcefile_proto)), (sourcekind == "cxx" and "--cpp_out=" or "--c_out=") .. sourcefile_dir})
+    -- get compilation flags
+    local argv = {sourcefile_proto}
+    if prefixdir then
+        table.insert(argv, "-I" .. prefixdir)
+    else
+        table.insert(argv, "-I" .. path.directory(sourcefile_proto))
+    end
+    table.insert(argv, (sourcekind == "cxx" and "--cpp_out=" or "--c_out=") .. sourcefile_dir)
+
+    -- do compile
+    os.vrunv(protoc, argv)
 
     -- trace
     if option.get("verbose") then

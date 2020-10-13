@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -39,7 +39,7 @@ task("install")
             ,   shortname = 'i'
 
                 -- options
-            ,   options = 
+            ,   options =
                 {
                     {'o', "installdir", "kv", nil   , "Set the install directory.",
                                                       "e.g.",
@@ -47,10 +47,11 @@ task("install")
                                                       "or  $ DESTDIR=/usr/local xmake install",
                                                       "or  $ INSTALLDIR=/usr/local xmake install" }
                 ,   {'a', "all",        "k",  nil   , "Install all targets."                      }
+                ,   {nil, "admin",      "k",  nil   , "Try to request administrator permission to install"}
 
                 ,   {                                                                               }
                 ,   {nil, "target",     "v",  nil   , "The target name. It will install all default targets if this parameter is not specified."
-                                                    , values = function () return try{ function () return table.keys(import("core.project.project").targets()) end } end }
+                                                    , values = function (complete, opt) return import("private.utils.complete_helper.targets")(complete, opt) end }
                 }
             }
 

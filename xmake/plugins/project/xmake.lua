@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -36,13 +36,14 @@ task("project")
             ,   description = "Generate the project file."
 
                 -- options
-            ,   options = 
+            ,   options =
                 {
-                    {'k', "kind",      "kv" , "makefile",   "Set the project kind." 
+                    {'k', "kind",      "kv" , "makefile",   "Set the project kind."
                                                         ,   "    - make"
                                                         ,   "    - xmakefile (makefile with xmake)"
                                                         ,   "    - cmake"
                                                         ,   "    - ninja"
+                                                        ,   "    - xcode (need cmake)"
                                                         ,   "    - compile_flags"
                                                         ,   "    - compile_commands (clang compilation database with json format)"
                                                         ,   "    - vs (auto detect), vs2002, vs2003, vs2005, vs2008"

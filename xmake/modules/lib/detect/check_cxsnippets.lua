@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -24,7 +24,7 @@ import("core.tool.linker")
 import("core.tool.compiler")
 import("core.language.language")
 
--- get function name 
+-- get function name
 --
 -- sigsetjmp
 -- sigsetjmp((void*)0, 0)
@@ -33,7 +33,7 @@ import("core.language.language")
 --
 function _funcname(funcinfo)
 
-    -- parse function name 
+    -- parse function name
     local name = string.match(funcinfo, "(.+){.+}")
     if name == nil then
         local pos = funcinfo:find("%(")
@@ -113,7 +113,7 @@ end
 --
 -- @param snippets  the snippets
 -- @param opt       the argument options
---                  e.g. 
+--                  e.g.
 --                  { verbose = false, target = [target|option], sourcekind = "[cc|cxx]"
 --                  , types = {"wchar_t", "char*"}, includes = "stdio.h", funcs = {"sigsetjmp", "sigsetjmp((void*)0, 0)"}
 --                  , configs = {defines = "xx", cxflags = ""}}
@@ -146,13 +146,13 @@ function main(snippets, opt)
     -- get links
     local links = {}
     if configs and configs.links then
-        table.join2(links, configs.links) 
+        table.join2(links, configs.links)
     end
     if opt.target then
         table.join2(links, opt.target:get("links"))
     end
     if configs and configs.syslinks then
-        table.join2(links, configs.syslinks) 
+        table.join2(links, configs.syslinks)
     end
     if opt.target then
         table.join2(links, opt.target:get("syslinks"))
@@ -190,7 +190,7 @@ function main(snippets, opt)
     local errors = nil
     local ok = try
     {
-        function () 
+        function ()
             if option.get("diagnosis") then
                 cprint("${dim}> %s", compiler.compcmd(sourcefile, objectfile, opt))
             end
@@ -215,23 +215,23 @@ function main(snippets, opt)
     if opt.verbose or option.get("verbose") or option.get("diagnosis") then
         local kind = opt.sourcekind == "cc" and "c" or "c++"
         if #includes > 0 then
-            cprint("${dim}> checking for the %s includes(%s)", kind, table.concat(includes, ", "))
+            cprint("${dim}> checking for %s includes(%s)", kind, table.concat(includes, ", "))
         end
         if #types > 0 then
-            cprint("${dim}> checking for the %s types(%s)", kind, table.concat(types, ", "))
+            cprint("${dim}> checking for %s types(%s)", kind, table.concat(types, ", "))
         end
         if #funcs > 0 then
-            cprint("${dim}> checking for the %s funcs(%s)", kind, table.concat(funcs, ", "))
+            cprint("${dim}> checking for %s funcs(%s)", kind, table.concat(funcs, ", "))
         end
         if #links > 0 then
-            cprint("${dim}> checking for the %s links(%s)", kind, table.concat(links, ", "))
+            cprint("${dim}> checking for %s links(%s)", kind, table.concat(links, ", "))
         end
         for idx_or_name, snippet in pairs(snippets) do
             local name = idx_or_name
             if type(name) == "number" then
                 name = snippet:sub(1, 16)
             end
-            cprint("${dim}> checking for the %s snippet(%s)", kind, name)
+            cprint("${dim}> checking for %s snippet(%s)", kind, name)
         end
     end
     if errors and option.get("diagnosis") and #tostring(errors) > 0 then

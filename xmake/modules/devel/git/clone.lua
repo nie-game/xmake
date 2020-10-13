@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -21,6 +21,7 @@
 -- imports
 import("core.base.option")
 import("lib.detect.find_tool")
+import("net.proxy")
 
 -- clone url
 --
@@ -30,7 +31,7 @@ import("lib.detect.find_tool")
 -- @code
 --
 -- import("devel.git")
--- 
+--
 -- git.clone("git@github.com:xmake-io/xmake.git")
 -- git.clone("git@github.com:xmake-io/xmake.git", {depth = 1, branch = "master", outputdir = "/tmp/xmake"})
 --
@@ -75,6 +76,13 @@ function main(url, opt)
         table.insert(argv, path.translate(opt.outputdir))
     end
 
+    -- use proxy?
+    local envs
+    local proxy_conf = proxy.get(url)
+    if proxy_conf then
+        envs = {ALL_PROXY = proxy_conf}
+    end
+
     -- clone it
-    os.vrunv(git.program, argv)
+    os.vrunv(git.program, argv, {envs = envs})
 end

@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -53,11 +53,11 @@ function main (appdir, ipafile, iconfile)
     os.mkdir(path.join(tmpdir, "Payload"))
 
     -- copy the .app directory into payload
-    os.cp(appdir, path.join(tmpdir, "Payload"))
+    os.vcp(appdir, path.join(tmpdir, "Payload"))
 
     -- copy icon file to iTunesArtwork
     if iconfile then
-        os.cp(iconfile, path.join(tmpdir, "iTunesArtwork"))
+        os.vcp(iconfile, path.join(tmpdir, "iTunesArtwork"))
     end
 
     -- generate .ipa file

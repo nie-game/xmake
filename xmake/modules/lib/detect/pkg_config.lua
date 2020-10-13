@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -32,11 +32,11 @@ import("detect.tools.find_pkg_config")
 -- @param opt       the argument options, {configdirs = {"/xxxx/pkgconfig/"}}
 --
 function version(name, opt)
-    
-    -- attempt to add search pathes from pkg-config
+
+    -- attempt to add search paths from pkg-config
     local pkg_config = find_pkg_config()
     if not pkg_config then
-        return 
+        return
     end
 
     -- init options
@@ -71,11 +71,11 @@ end
 -- @param opt       the argument options, {configdirs = {"/xxxx/pkgconfig/"}}
 --
 function variables(name, variables, opt)
-    
-    -- attempt to add search pathes from pkg-config
+
+    -- attempt to add search paths from pkg-config
     local pkg_config = find_pkg_config()
     if not pkg_config then
-        return 
+        return
     end
 
     -- init options
@@ -116,18 +116,18 @@ end
 --
 -- @return      {links = {"ssl", "crypto", "z"}, linkdirs = {""}, includedirs = {""}, version = ""}
 --
--- @code 
+-- @code
 --
 -- local libinfo = pkg_config.libinfo("openssl")
--- 
+--
 -- @endcode
 --
 function libinfo(name, opt)
-    
-    -- attempt to add search pathes from pkg-config
+
+    -- attempt to add search paths from pkg-config
     local pkg_config = find_pkg_config()
     if not pkg_config then
-        return 
+        return
     end
 
     -- init options
@@ -147,29 +147,26 @@ function libinfo(name, opt)
 
         -- init result
         result = {}
-        for _, flag in ipairs(flags:split('%s')) do
-
-            -- get links
-            local link = flag:match("%-l(.*)")
-            if link then
+        for _, flag in ipairs(os.argv(flags)) do
+            if flag:startswith("-L") and #flag > 2 then
+                -- get linkdirs
+                local linkdir = flag:sub(3)
+                if linkdir and os.isdir(linkdir) then
+                    result.linkdirs = result.linkdirs or {}
+                    table.insert(result.linkdirs, linkdir)
+                end
+            elseif flag:startswith("-I") and #flag > 2 then
+                -- get includedirs
+                local includedir = flag:sub(3)
+                if includedir and os.isdir(includedir) then
+                    result.includedirs = result.includedirs or {}
+                    table.insert(result.includedirs, includedir)
+                end
+            elseif flag:startswith("-l") and #flag > 2 then
+                -- get links
+                local link = flag:sub(3)
                 result.links = result.links or {}
                 table.insert(result.links, link)
-            end
-       
-            -- get linkdirs
-            local linkdirs = nil
-            local linkdir = flag:match("%-L(.*)")
-            if linkdir and os.isdir(linkdir) then
-                result.linkdirs = result.linkdirs or {}
-                table.insert(result.linkdirs, linkdir)
-            end
-       
-            -- get includedirs
-            local includedirs = nil
-            local includedir = flag:match("%-I(.*)")
-            if includedir and os.isdir(includedir) then
-                result.includedirs = result.includedirs or {}
-                table.insert(result.includedirs, includedir)
             end
         end
     end
@@ -185,67 +182,6 @@ function libinfo(name, opt)
     if configdirs_old then
         os.setenv("PKG_CONFIG_PATH", configdirs_old)
     end
-
-    -- ok?
     return result
 end
 
--- find package 
---
--- @param name  the package name
--- @param opt   the argument options, {plat = "", arch = "", links = {...}}
---
--- @return      {links = {"ssl", "crypto", "z"}, linkdirs = {""}, includedirs = {""}}
---
--- @code 
---
--- local libinfo = pkg_config.find("openssl")
--- 
--- @endcode
---
-function find(name, opt)
-
-    -- init options
-    opt = opt or {}
-
-    -- get library info
-    local libinfo = libinfo(name, opt)
-    if not libinfo then
-        return 
-    end
-
-    -- get links
-    local links = libinfo.links
-    if not links or #links == 0 then
-        links = opt.links
-    end
-
-    -- find library 
-    local result = nil
-    local linkdirs = table.wrap(libinfo.linkdirs)
-    for _, link in ipairs(links) do
-        local libinfo = find_library(link, linkdirs)
-        if libinfo then
-            result          = result or {}
-            result.links    = table.join(result.links or {}, libinfo.link)
-            result.linkdirs = table.join(result.linkdirs or {}, libinfo.linkdir)
-        end
-    end
-    if result and result.links then
-        result.linkdirs = table.unique(result.linkdirs)
-    end
-
-    -- get includedirs
-    if libinfo.includedirs then
-        result             = result or {}
-        result.includedirs = libinfo.includedirs
-    end
-
-    -- save version
-    if result and libinfo.version then
-        result.version = libinfo.version
-    end
-
-    -- ok?
-    return result
-end

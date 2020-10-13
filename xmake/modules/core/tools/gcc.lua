@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -25,6 +25,7 @@ import("core.project.config")
 import("core.project.project")
 import("core.language.language")
 import("private.tools.ccache")
+import("private.utils.progress")
 
 -- init it
 function init(self)
@@ -56,31 +57,27 @@ function init(self)
 
          -- strip
     ,   ["-s"]  = "-s"
-    ,   ["-S"]  = "-S"
+    ,   ["-S"]  = "-Wl,-S"
     })
 
     -- for macho target
     if is_plat("macosx") or is_plat("iphoneos") then
-        self:add("mapflags", 
+        self:add("mapflags",
         {
             ["-s"] = "-Wl,-x"
-        ,   ["-S"] = "-Wl,-S"
         })
     end
 end
 
 -- make the strip flag
 function nf_strip(self, level)
-    local maps = 
-    {   
-        debug = "-S"
+    local maps =
+    {
+        debug = "-Wl,-S"
     ,   all   = "-s"
     }
-
-    local plat = config.plat()
-    if plat == "macosx" or plat == "iphoneos" then
+    if is_plat("macosx") or is_plat("iphoneos") then
         maps.all   = "-Wl,-x"
-        maps.debug = "-Wl,-S"
     end
     return maps[level]
 end
@@ -93,7 +90,7 @@ function nf_symbol(self, level)
         local maps = _g.symbol_maps
         if not maps then
             maps =
-            {   
+            {
                 debug  = "-g"
             ,   hidden = "-fvisibility=hidden"
             }
@@ -108,8 +105,8 @@ end
 
 -- make the warning flag
 function nf_warning(self, level)
-    local maps = 
-    {   
+    local maps =
+    {
         none       = "-w"
     ,   less       = "-Wall"
     ,   more       = "-Wall"
@@ -120,10 +117,23 @@ function nf_warning(self, level)
     return maps[level]
 end
 
+-- make the fp-model flag
+function nf_fpmodel(self, level)
+    local maps =
+    {
+        precise    = "" --default
+    ,   fast       = "-ffast-math"
+    ,   strict     = {"-frounding-math", "-ftrapping-math"}
+    ,   except     = "-ftrapping-math"
+    ,   noexcept   = "-fno-trapping-math"
+    }
+    return maps[level]
+end
+
 -- make the optimize flag
 function nf_optimize(self, level)
-    local maps = 
-    {   
+    local maps =
+    {
         none       = "-O0"
     ,   fast       = "-O1"
     ,   faster     = "-O2"
@@ -131,13 +141,13 @@ function nf_optimize(self, level)
     ,   smallest   = "-Os"
     ,   aggressive = "-Ofast"
     }
-    return maps[level] 
+    return maps[level]
 end
 
 -- make the vector extension flag
 function nf_vectorext(self, extension)
-    local maps = 
-    {   
+    local maps =
+    {
         mmx   = "-mmmx"
     ,   sse   = "-msse"
     ,   sse2  = "-msse2"
@@ -147,7 +157,7 @@ function nf_vectorext(self, extension)
     ,   avx2  = "-mavx2"
     ,   neon  = "-mfpu=neon"
     }
-    return maps[extension] 
+    return maps[extension]
 end
 
 -- make the language flag
@@ -155,7 +165,7 @@ function nf_language(self, stdname)
 
     -- the stdc maps
     if _g.cmaps == nil then
-        _g.cmaps = 
+        _g.cmaps =
         {
             -- stdc
             ansi        = "-ansi"
@@ -170,7 +180,7 @@ function nf_language(self, stdname)
 
     -- the stdc++ maps
     if _g.cxxmaps == nil then
-        _g.cxxmaps = 
+        _g.cxxmaps =
         {
             cxx98        = "-std=c++98"
         ,   gnuxx98      = "-std=gnu++98"
@@ -291,8 +301,8 @@ function add_sourceflags(self, sourcefile, fileconfig, target, targetkind)
 
     -- add language type flags explicitly if the sourcekind is changed.
     --
-    -- because compiler maybe compile `.c` as c++. 
-    -- e.g. 
+    -- because compiler maybe compile `.c` as c++.
+    -- e.g.
     --   add_files("*.c", {sourcekind = "cxx"})
     --
     local sourcekind = fileconfig.sourcekind
@@ -314,21 +324,14 @@ function linkargv(self, objectfiles, targetkind, targetfile, flags, opt)
 
     -- add `-Wl,--out-implib,outputdir/libxxx.a` for xxx.dll on mingw/gcc
     if targetkind == "shared" and is_plat("mingw") then
-        table.insert(flags_extra, "-Wl,--out-implib," .. os.args(path.join(path.directory(targetfile), path.basename(targetfile) .. ".lib")))
+        table.insert(flags_extra, "-Wl,--out-implib," .. path.join(path.directory(targetfile), path.basename(targetfile) .. ".lib"))
     end
 
     -- init arguments
+    opt = opt or {}
     local argv = table.join("-o", targetfile, objectfiles, flags, flags_extra)
-
-    -- too long arguments for windows? 
-    if is_host("windows") then
-        opt = opt or {}
-        local args = os.args(argv, {escape = true})
-        if #args > 1024 and not opt.rawargs then
-            local argsfile = os.tmpfile(args) .. ".args.txt" 
-            io.writefile(argsfile, args)
-            argv = {"@" .. argsfile}
-        end
+    if is_host("windows") and not opt.rawargs then
+        argv = winos.cmdargv(argv)
     end
     return self:program(), argv
 end
@@ -340,7 +343,8 @@ function link(self, objectfiles, targetkind, targetfile, flags)
     os.mkdir(path.directory(targetfile))
 
     -- link it
-    os.runv(linkargv(self, objectfiles, targetkind, targetfile, flags))
+    local program, argv = linkargv(self, objectfiles, targetkind, targetfile, flags)
+    os.runv(program, argv, {envs = self:runenvs()})
 end
 
 -- has color diagnostics?
@@ -428,13 +432,14 @@ function compile(self, sourcefile, objectfile, dependinfo, flags)
             end
 
             -- has color diagnostics? enable it
-            local colors_diagnostics = _has_color_diagnostics(self) 
+            local colors_diagnostics = _has_color_diagnostics(self)
             if colors_diagnostics then
                 compflags = table.join(compflags, colors_diagnostics)
             end
 
             -- do compile
-            return os.iorunv(compargv(self, sourcefile, objectfile, compflags))
+            local program, argv = compargv(self, sourcefile, objectfile, compflags)
+            return os.iorunv(program, argv, {envs = self:runenvs()})
         end,
         catch
         {
@@ -474,6 +479,9 @@ function compile(self, sourcefile, objectfile, dependinfo, flags)
                     local lines = errdata:split('\n', {plain = true})
                     if #lines > 0 then
                         local warnings = table.concat(table.slice(lines, 1, ifelse(#lines > 8, 8, #lines)), "\n")
+                        if progress.showing_without_scroll() then
+                            print("")
+                        end
                         cprint("${color.warning}%s", warnings)
                     end
                 end

@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -21,6 +21,7 @@
 -- imports
 import("core.base.option")
 import("lib.detect.find_tool")
+import("net.proxy")
 
 -- get user agent
 function _get_user_agent()
@@ -62,6 +63,13 @@ function _curl_download(tool, url, outputfile)
         table.insert(argv, "-fsSL")
     end
 
+    -- use proxy?
+    local proxy_conf = proxy.get(url)
+    if proxy_conf then
+        table.insert(argv, "-x")
+        table.insert(argv, proxy_conf)
+    end
+
     -- set user-agent
     local user_agent = _get_user_agent()
     if user_agent then
@@ -99,6 +107,23 @@ function _wget_download(tool, url, outputfile)
         os.mkdir(outputdir)
     end
 
+    -- use proxy?
+    local proxy_conf = proxy.get(url)
+    if proxy_conf then
+        table.insert(argv, "-e")
+        table.insert(argv, "use_proxy=yes")
+        table.insert(argv, "-e")
+        if url:startswith("http://") then
+            table.insert(argv, "http_proxy=" .. proxy_conf)
+        elseif url:startswith("https://") then
+            table.insert(argv, "https_proxy=" .. proxy_conf)
+        elseif url:startswith("ftp://") then
+            table.insert(argv, "ftp_proxy=" .. proxy_conf)
+        else
+            table.insert(argv, "http_proxy=" .. proxy_conf)
+        end
+    end
+
     -- set user-agent
     local user_agent = _get_user_agent()
     if user_agent then
@@ -127,7 +152,7 @@ function main(url, outputfile)
 
     -- init output file
     outputfile = outputfile or path.filename(url):gsub("%?.+$", "")
-    
+
     -- attempt to download url using curl first
     local tool = find_tool("curl", {version = true})
     if tool then

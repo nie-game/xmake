@@ -11,7 +11,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * Copyright (C) 2015-2020, TBOOX Open Source Group.
  *
  * @author      ruki
@@ -35,8 +35,8 @@
  * implementation
  */
 
-/* p = process.open(command, 
- * {outpath = "", errpath = "", outfile = "", errfile = "", outpipe = "", errpipe = "", envs = {"PATH=xxx", "XXX=yyy"}}) 
+/* p = process.open(command,
+ * {outpath = "", errpath = "", outfile = "", errfile = "", outpipe = "", errpipe = "", envs = {"PATH=xxx", "XXX=yyy"}})
  */
 tb_int_t xm_process_open(lua_State* lua)
 {
@@ -60,13 +60,19 @@ tb_int_t xm_process_open(lua_State* lua)
     xm_io_file_t*      errfile = tb_null;
     tb_pipe_file_ref_t outpipe = tb_null;
     tb_pipe_file_ref_t errpipe = tb_null;
-    if (lua_istable(lua, 2)) 
-    { 
+    if (lua_istable(lua, 2))
+    {
         // is detached?
         lua_pushstring(lua, "detach");
         lua_gettable(lua, 2);
         if (lua_toboolean(lua, -1))
             attr.flags |= TB_PROCESS_FLAG_DETACH;
+        lua_pop(lua, 1);
+
+        // get curdir
+        lua_pushstring(lua, "curdir");
+        lua_gettable(lua, 3);
+        attr.curdir = lua_tostring(lua, -1);
         lua_pop(lua, 1);
 
         // get outpath
@@ -137,7 +143,7 @@ tb_int_t xm_process_open(lua_State* lua)
                 if (lua_isstring(lua, -1))
                 {
                     // add this environment value
-                    if (envn + 1 < tb_arrayn(envs)) 
+                    if (envn + 1 < tb_arrayn(envs))
                         envs[envn++] = lua_tostring(lua, -1);
                     else
                     {
@@ -211,7 +217,7 @@ tb_int_t xm_process_open(lua_State* lua)
 
     // init process
     tb_process_ref_t process = (tb_process_ref_t)tb_process_init_cmd(command, &attr);
-    if (process) lua_pushlightuserdata(lua, (tb_pointer_t)process);
+    if (process) xm_lua_pushpointer(lua, (tb_pointer_t)process);
     else lua_pushnil(lua);
     return 1;
 }

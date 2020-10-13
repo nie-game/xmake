@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -21,17 +21,18 @@
 -- imports
 import("lib.detect.find_program")
 import("lib.detect.find_programver")
+import("lib.detect.find_tool")
 
--- find lib 
+-- find lib
 --
 -- @param opt   the argument options, e.g. {version = true}
 --
 -- @return      program, version
 --
--- @code 
+-- @code
 --
 -- local lib = find_lib()
--- 
+--
 -- @endcode
 --
 function main(opt)
@@ -42,7 +43,7 @@ function main(opt)
     -- init options
     opt       = opt or {}
     opt.check = opt.check or function (program)
-      
+
         -- make an stub source file
         local libraryfile = os.tmpfile() .. ".lib"
         local objectfile  = os.tmpfile() .. ".obj"
@@ -50,9 +51,11 @@ function main(opt)
         io.writefile(sourcefile, "int test(void)\n{return 0;}")
 
         -- check it
-        os.run("cl -c -Fo%s %s", objectfile, sourcefile)
-        os.run("link -lib -out:%s %s", libraryfile, objectfile)
-        verinfo = os.iorun("%s -list %s", program, libraryfile)
+        local cl = assert(find_tool("cl"))
+        local link = assert(find_tool("link"))
+        os.runv(cl.program, {"-c", "-Fo" .. objectfile, sourcefile}, {envs = opt.envs})
+        os.runv(link.program, {"-lib", "-out:" .. libraryfile, objectfile}, {envs = opt.envs})
+        verinfo = os.iorunv(program, {"-list", libraryfile}, {envs = opt.envs})
 
         -- remove files
         os.rm(objectfile)

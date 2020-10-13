@@ -4,19 +4,120 @@
 
 ### New features
 
+* [#955](https://github.com/xmake-io/xmake/issues/955): Add zig project templates
+* [#956](https://github.com/xmake-io/xmake/issues/956): Add wasm platform and support Qt/Wasm SDK
+* Upgrade luajit vm and support for runing on mips64 device
+* [#972](https://github.com/xmake-io/xmake/issues/972): Add `depend.on_changed()` api to simplify adding dependent files
+* [#981](https://github.com/xmake-io/xmake/issues/981): Add `set_fpmodels()` for math optimization mode
+* [#980](https://github.com/xmake-io/xmake/issues/980): Support Intel C/C++ and Fortran Compiler
+* [#986](https://github.com/xmake-io/xmake/issues/986): Support for `c11` and `c17` for MSVC Version 16.8 and Above
+* [#979](https://github.com/xmake-io/xmake/issues/979): Add Abstraction for OpenMP. `add_rules("c++.openmp")`
+
+### Change
+
+* [#958](https://github.com/xmake-io/xmake/issues/958): Improve mingw platform to support llvm-mingw toolchain
+* Improve `add_requires("zlib~xxx")` to support for installing multi-packages at same time
+* [#977](https://github.com/xmake-io/xmake/issues/977): Improve find_mingw for windows
+* [#978](https://github.com/xmake-io/xmake/issues/978): Improve toolchain flags order
+
+### Bugs fixed
+
+* [#951](https://github.com/xmake-io/xmake/issues/951): Fix emcc support for windows
+
+## v2.3.7
+
+### New features
+
+* [#2941](https://github.com/microsoft/winget-pkgs/pull/2941): Add support for winget
+* Add xmake-tinyc installer without msvc compiler for windows
+* Add tinyc compiler toolchain
+* Add emcc compiler toolchain (emscripten) to compiling to asm.js and WebAssembly
+* [#947](https://github.com/xmake-io/xmake/issues/947): Add `xmake g --network=private` to enable the private network
+
+### Change
+
+* [#907](https://github.com/xmake-io/xmake/issues/907): Improve to the linker optimization for msvc
+* Improve to detect qt sdk environment
+* [#918](https://github.com/xmake-io/xmake/pull/918): Improve to support cuda11 toolchains
+* Improve Qt support for ubuntu/apt
+* Improve CMake project generator
+* [#931](https://github.com/xmake-io/xmake/issues/931): Support to export packages with all dependences
+* [#930](https://github.com/xmake-io/xmake/issues/930): Support to download package without version list directly
+* [#927](https://github.com/xmake-io/xmake/issues/927): Support to switch arm/thumb mode for android ndk
+* Improve trybuild/cmake to support android/mingw/iphoneos/watchos toolchains
+
+### Bugs fixed
+
+* [#903](https://github.com/xmake-io/xmake/issues/903): Fix install vcpkg packages fails
+* [#912](https://github.com/xmake-io/xmake/issues/912): Fix the custom toolchain
+* [#914](https://github.com/xmake-io/xmake/issues/914): Fix bad light userdata pointer for lua on some aarch64 devices
+
+## v2.3.6
+
+### New features
+
+* Add `xmake project -k xcode` generator (use cmake)
+* [#870](https://github.com/xmake-io/xmake/issues/870): Support gfortran compiler
+* [#887](https://github.com/xmake-io/xmake/pull/887): Support zig compiler
+* [#893](https://github.com/xmake-io/xmake/issues/893): Add json module
+* [#898](https://github.com/xmake-io/xmake/issues/898): Support cross-compilation for golang
+* [#275](https://github.com/xmake-io/xmake/issues/275): Support go package manager to install go packages
+* [#581](https://github.com/xmake-io/xmake/issues/581): Support dub package manager to install dlang packages
+
+### Change
+
+* [#868](https://github.com/xmake-io/xmake/issues/868): Support new cl.exe dependency report files, `/sourceDependencies xxx.json`
+* [#902](https://github.com/xmake-io/xmake/issues/902): Improve to detect cross-compilation toolchain
+
+## v2.3.5
+
+### New features
+
+* Add `xmake show -l envs` to show all builtin envirnoment variables
+* [#861](https://github.com/xmake-io/xmake/issues/861): Support search local package file to install remote package
+* [#854](https://github.com/xmake-io/xmake/issues/854): Support global proxy settings for curl, wget and git
+
+### Change
+
+* [#828](https://github.com/xmake-io/xmake/issues/828): Support to import sub-directory files for protobuf rules
+* [#835](https://github.com/xmake-io/xmake/issues/835): Improve mode.minsizerel to add /GL flags for msvc
+* [#828](https://github.com/xmake-io/xmake/issues/828): Support multi-level directories for protobuf/import
+* [#838](https://github.com/xmake-io/xmake/issues/838#issuecomment-643570920): Support to override builtin-rules for `add_files("src/*.c", {rules = {"xx", override = true}})`
+* [#847](https://github.com/xmake-io/xmake/issues/847): Support to parse include deps for rc file
+* Improve msvc tool chain, remove the dependence of global environment variables
+* [#857](https://github.com/xmake-io/xmake/pull/857): Improved `set_toolchains()` when cross-compilation is supported, specific target can be switched to host toolchain and compiled at the same time
+
+### Bugs fixed
+
+* Fix the progress bug for theme
+* [#829](https://github.com/xmake-io/xmake/issues/829): Fix invalid sysroot path for macOS
+* [#832](https://github.com/xmake-io/xmake/issues/832): Fix find_packages bug for the debug mode
+
+## v2.3.4
+
+### New features
+
 * [#630](https://github.com/xmake-io/xmake/issues/630): Support *BSD system, e.g. FreeBSD, ..
 * Add wprint builtin api to show warnings
 * [#784](https://github.com/xmake-io/xmake/issues/784): Add `set_policy()` to set and modify some builtin policies
+* [#780](https://github.com/xmake-io/xmake/issues/780): Add set_toolchains/set_toolsets for target and improve to detect cross-compilation toolchains
+* [#798](https://github.com/xmake-io/xmake/issues/798): Add `xmake show` plugin to show some builtin configuration values and infos
+* [#797](https://github.com/xmake-io/xmake/issues/797): Add ninja theme style, e.g. `xmake g --theme=ninja`
+* [#816](https://github.com/xmake-io/xmake/issues/816): Add mode.releasedbg and mode.minsizerel rules
+* [#819](https://github.com/xmake-io/xmake/issues/819): Support ansi/vt100 terminal control
 
 ### Change
 
 * [#771](https://github.com/xmake-io/xmake/issues/771): Check includedirs, linkdirs and frameworkdirs
 * [#774](https://github.com/xmake-io/xmake/issues/774): Support ltui windows resize for `xmake f --menu`
 * [#782](https://github.com/xmake-io/xmake/issues/782): Add check flags failed tips for add_cxflags, ..
+* [#808](https://github.com/xmake-io/xmake/issues/808): Support add_frameworks for cmakelists
+* [#820](https://github.com/xmake-io/xmake/issues/820): Support independent working/build directory
 
-### Bug fixed
+### Bugs fixed
 
 * [#786](https://github.com/xmake-io/xmake/issues/786): Fix check header file deps
+* [#810](https://github.com/xmake-io/xmake/issues/810): Fix strip debug bug for linux
 
 ## v2.3.3
 
@@ -79,7 +180,7 @@
 
 ### Bugs fixed
 
-* Fix incremental compilation for checking the dependent file 
+* Fix incremental compilation for checking the dependent file
 * Fix log output for parsing xmake-vscode/problem info
 * [#684](https://github.com/xmake-io/xmake/issues/684): Fix linker errors for android ndk on windows
 
@@ -94,7 +195,7 @@
 
 ### Change
 
-* [#563](https://github.com/xmake-io/xmake/pull/563): Separate build rules for specific language files from action/build 
+* [#563](https://github.com/xmake-io/xmake/pull/563): Separate build rules for specific language files from action/build
 * [#570](https://github.com/xmake-io/xmake/issues/570): Add `qt.widgetapp` and `qt.quickapp` rules
 * [#576](https://github.com/xmake-io/xmake/issues/576): Uses `set_toolchain` instead of `add_tools` and `set_tools`
 * Improve `xmake create` action
@@ -106,8 +207,8 @@
 
 ### Bugs fixed
 
-* [#567](https://github.com/xmake-io/xmake/issues/567): Fix out of memory for serialize 
-* [#566](https://github.com/xmake-io/xmake/issues/566): Fix link order problem with remote packages 
+* [#567](https://github.com/xmake-io/xmake/issues/567): Fix out of memory for serialize
+* [#566](https://github.com/xmake-io/xmake/issues/566): Fix link order problem with remote packages
 * [#565](https://github.com/xmake-io/xmake/issues/565): Fix run path for vcpkg packages
 * [#597](https://github.com/xmake-io/xmake/issues/597): Fix run `xmake require` command too slowly
 * [#634](https://github.com/xmake-io/xmake/issues/634): Fix mode.coverage rule and check flags
@@ -123,7 +224,7 @@
 * Add filelock for io
 * [#513](https://github.com/xmake-io/xmake/issues/513): Support for android/termux
 * [#517](https://github.com/xmake-io/xmake/issues/517): Add `add_cleanfiles` api for target
-* [#537](https://github.com/xmake-io/xmake/pull/537): Add `set_runenv` api to override os/envs 
+* [#537](https://github.com/xmake-io/xmake/pull/537): Add `set_runenv` api to override os/envs
 
 ### Changes
 
@@ -159,7 +260,7 @@
 
 ### New features
 
-* [#380](https://github.com/xmake-io/xmake/pull/380): Add support to export compile_flags.txt 
+* [#380](https://github.com/xmake-io/xmake/pull/380): Add support to export compile_flags.txt
 * [#382](https://github.com/xmake-io/xmake/issues/382): Simplify simple scope settings
 * [#397](https://github.com/xmake-io/xmake/issues/397): Add clib package manager support
 * [#404](https://github.com/xmake-io/xmake/issues/404): Support Qt for android and deploy android apk
@@ -188,7 +289,7 @@
 * [#310](https://github.com/xmake-io/xmake/issues/310): Add theme feature
 * [#318](https://github.com/xmake-io/xmake/issues/318): Add `add_installfiles` api to target
 * [#339](https://github.com/xmake-io/xmake/issues/339): Improve `add_requires` and `find_package` to integrate the 3rd package manager
-* [#327](https://github.com/xmake-io/xmake/issues/327): Integrate with Conan package manager 
+* [#327](https://github.com/xmake-io/xmake/issues/327): Integrate with Conan package manager
 * Add the builtin api `find_packages("pcre2", "zlib")` to find multiple packages
 * [#320](https://github.com/xmake-io/xmake/issues/320): Add template configuration files and replace all variables before building
 * [#179](https://github.com/xmake-io/xmake/issues/179): Generate CMakelist.txt file for `xmake project` plugin
@@ -206,7 +307,7 @@
 * [#301](https://github.com/xmake-io/xmake/issues/301): Improve precompiled header file
 * [#322](https://github.com/xmake-io/xmake/issues/322): Add `option.add_features`, `option.add_cxxsnippets` and `option.add_csnippets`
 * Remove some deprecated interfaces of xmake 1.x, e.g. `add_option_xxx`
-* [#327](https://github.com/xmake-io/xmake/issues/327): Support conan package manager for `lib.detect.find_package` 
+* [#327](https://github.com/xmake-io/xmake/issues/327): Support conan package manager for `lib.detect.find_package`
 * Improve `lib.detect.find_package` and add builtin `find_packages("zlib 1.x", "openssl", {xxx = ...})` api
 * Mark `set_modes()` as deprecated, we use `add_rules("mode.debug", "mode.release")` instead of it
 * [#353](https://github.com/xmake-io/xmake/issues/353): Improve `target:set`, `target:add` and add `target:del` to modify target configuration
@@ -239,7 +340,7 @@
 * [#229](https://github.com/xmake-io/xmake/issues/229): Improve to select toolset for vcproj plugin
 * Improve compilation dependences
 * Support *.xz for extractor
-* [#249](https://github.com/xmake-io/xmake/pull/249): revise progress formatting to space-leading three digit percentages 
+* [#249](https://github.com/xmake-io/xmake/pull/249): revise progress formatting to space-leading three digit percentages
 * [#247](https://github.com/xmake-io/xmake/pull/247): Add `-D` and `--diagnosis` instead of `--backtrace`
 * [#259](https://github.com/xmake-io/xmake/issues/259): Improve on_build, on_build_file and on_xxx for target and rule
 * [#269](https://github.com/xmake-io/xmake/issues/269): Clean up the temporary files at last 30 days
@@ -259,7 +360,7 @@
 * Add `has_config`, `get_config`, and `is_config` apis
 * Add `set_config` to set the default configuration
 * Add `$xmake --try` to try building project using third-party buildsystem
-* Add `set_enabled(false)` to disable target 
+* Add `set_enabled(false)` to disable target
 * [#69](https://github.com/xmake-io/xmake/issues/69): Add remote package management, `add_requires("tbox ~1.6.1")`
 * [#216](https://github.com/xmake-io/xmake/pull/216): Add windows mfc rules
 
@@ -280,7 +381,7 @@
 * Fix high cpu usage bug and Exit issues for `$ xmake f --menu`
 * [#197](https://github.com/xmake-io/xmake/issues/197): Fix Chinese path for generating vs201x project
 * Fix wdk rules bug
-* [#205](https://github.com/xmake-io/xmake/pull/205): Fix targetdir,objectdir not used in vsproject 
+* [#205](https://github.com/xmake-io/xmake/pull/205): Fix targetdir,objectdir not used in vsproject
 
 ## v2.2.1
 
@@ -294,7 +395,7 @@
 * [#160](https://github.com/xmake-io/xmake/issues/160): Support Qt compilation environment and add `qt.console`, `qt.application` rules
 * Add some Qt project templates
 * [#169](https://github.com/xmake-io/xmake/issues/169): Support yasm for linux, macosx and windows
-* [#159](https://github.com/xmake-io/xmake/issues/159): Support WDK driver compilation environment 
+* [#159](https://github.com/xmake-io/xmake/issues/159): Support WDK driver compilation environment
 
 ### Changes
 
@@ -440,7 +541,7 @@
 
 ### Changes
 
-* [#87](https://github.com/xmake-io/xmake/issues/87): Add includes and links from target deps automatically 
+* [#87](https://github.com/xmake-io/xmake/issues/87): Add includes and links from target deps automatically
 * Improve `import` to load user extension and global modules
 * [#93](https://github.com/xmake-io/xmake/pull/93): Improve `xmake lua` to run a single line command
 * Improve to print gcc error and warning info
@@ -567,8 +668,8 @@
 
 ### Bugs fixed
 
-* [#41](https://github.com/waruqi/xmake/issues/41): Fix checker bug for windows 
-* [#43](https://github.com/waruqi/xmake/issues/43): Avoid to generate unnecessary .xmake directory  
+* [#41](https://github.com/waruqi/xmake/issues/41): Fix checker bug for windows
+* [#43](https://github.com/waruqi/xmake/issues/43): Avoid to generate unnecessary .xmake directory
 * Add c++ stl search directories for android
 * Fix compile error for rhel 5.10
 * Fix `os.iorun` bug
@@ -611,15 +712,15 @@
 
 ### Bugs fixed
 
-* Fix check ld failed without g++ on linux 
+* Fix check ld failed without g++ on linux
 * Fix compile `*.cxx` files failed
 
 ## v2.0.3
 
-### New features 
+### New features
 
 * Add check includes dependence automatically
-* Add print colors 
+* Add print colors
 * Add debugger support, e.g. `xmake run -d program ...`
 
 ### Changes
@@ -641,7 +742,7 @@
 
 * Change install and uninstall actions
 * Update templates
-* Improve to check function 
+* Improve to check function
 
 ### Bugs fixed
 
@@ -651,7 +752,7 @@
 * Fix path bug for windows
 * Fix check function bug
 * Fix check toolchains failed
-* Fix compile failed for android on windows 
+* Fix compile failed for android on windows
 
 ## v2.0.1
 
@@ -672,13 +773,13 @@
 
 * Rewrite interpreter for xmake.lua
 * More strict syntax detection mechanism
-* More strict api scope for xmake.lua 
+* More strict api scope for xmake.lua
 * Simplify template development
 * Extend platforms, tools, templates and actions fastly
 * Simplify api and support import modules
 * Remove dependence for gnu make/nmake, no longer need makefile
 * Optimize speed for building and faster x4 than v1.0.4
-* Optimize automatic detection 
+* Optimize automatic detection
 * Modify some api name, but be compatible with the old version
 * Optimize merging static library
 * Simplify cross compilation using argument `--sdk=xxx`
@@ -703,7 +804,7 @@
 * Add apple platforms：watchos, watchsimulator
 * Add architecture x64, amd64, x86_amd64 for windows
 * Support switch static and share library
-* Add `-j/--jobs` argument for supporting multi-jobs 
+* Add `-j/--jobs` argument for supporting multi-jobs
 
 ### Changes
 
@@ -739,19 +840,120 @@
 
 ### 新特性
 
+* [#955](https://github.com/xmake-io/xmake/issues/955): 添加 Zig 空工程模板
+* [#956](https://github.com/xmake-io/xmake/issues/956): 添加 Wasm 编译平台，并且支持 Qt/Wasm SDK
+* 升级luajit到v2.1最新分支版本，并且支持mips64上运行xmake
+* [#972](https://github.com/xmake-io/xmake/issues/972): 添加`depend.on_changed()`去简化依赖文件的处理
+* [#981](https://github.com/xmake-io/xmake/issues/981): 添加`set_fpmodels()`去抽象化设置math/float-point编译优化模式
+* [#980](https://github.com/xmake-io/xmake/issues/980): 添加对 Intel C/C++ 和 Fortran 编译器的全平台支持
+* [#986](https://github.com/xmake-io/xmake/issues/986): 对16.8以上msvc编译器增加 `c11`/`c17` 支持
+* [#979](https://github.com/xmake-io/xmake/issues/979): 添加对OpenMP的跨平台抽象配置。`add_rules("c++.openmp")`
+
+### 改进
+
+* [#958](https://github.com/xmake-io/xmake/issues/958): 改进mingw平台，增加对 llvm-mingw 工具链的支持，以及 arm64/arm 架构的支持
+* 增加 `add_requires("zlib~xxx")` 模式使得能够支持同时安装带有多种配置的同一个包，作为独立包存在
+* [#977](https://github.com/xmake-io/xmake/issues/977): 改进 find_mingw 在 windows 上的探测
+* [#978](https://github.com/xmake-io/xmake/issues/978): 改进工具链的flags顺序
+
+### Bugs修复
+
+* [#951](https://github.com/xmake-io/xmake/issues/951): 修复 emcc (WebAssembly) 工具链在windows上的支持
+
+## v2.3.7
+
+### 新特性
+
+* [#2941](https://github.com/microsoft/winget-pkgs/pull/2941): 支持通过 winget 来安装 xmake
+* 添加 xmake-tinyc 安装包，内置tinyc编译器，支持windows上无msvc环境也可直接编译c代码
+* 添加 tinyc 编译工具链
+* 添加 emcc (emscripten) 编译工具链去编译 asm.js 和 WebAssembly
+* [#947](https://github.com/xmake-io/xmake/issues/947): 通过 `xmake g --network=private` 配置设置私有网络模式，避免远程依赖包下载访问外网导致编译失败
+
+### 改进
+
+* [#907](https://github.com/xmake-io/xmake/issues/907): 改进msvc的链接器优化选项，生成更小的可执行程序
+* 改进ubuntu下Qt环境的支持
+* [#918](https://github.com/xmake-io/xmake/pull/918): 改进cuda11工具链的支持
+* 改进Qt支持，对通过 ubuntu/apt 安装的Qt sdk也进行了探测支持，并且检测效率也优化了下
+* 改进 CMake 工程文件生成器
+* [#931](https://github.com/xmake-io/xmake/issues/931): 改进导出包，支持导出所有依赖包
+* [#930](https://github.com/xmake-io/xmake/issues/930): 如果私有包定义没有版本定义，支持直接尝试下载包
+* [#927](https://github.com/xmake-io/xmake/issues/927): 改进android ndk，支持arm/thumb指令模式切换
+* 改进 trybuild/cmake 支持 Android/Mingw/iPhoneOS/WatchOS 工具链
+
+### Bugs修复
+
+* [#903](https://github.com/xmake-io/xmake/issues/903): 修复vcpkg包安装失败问题
+* [#912](https://github.com/xmake-io/xmake/issues/912): 修复自定义工具链
+* [#914](https://github.com/xmake-io/xmake/issues/914): 修复部分aarch64设备上运行lua出现bad light userdata pointer问题
+
+## v2.3.6
+
+### 新特性
+
+* 添加xcode工程生成器插件，`xmake project -k cmake` （当前采用cmake生成）
+* [#870](https://github.com/xmake-io/xmake/issues/870): 支持gfortran编译器
+* [#887](https://github.com/xmake-io/xmake/pull/887): 支持zig编译器
+* [#893](https://github.com/xmake-io/xmake/issues/893): 添加json模块
+* [#898](https://github.com/xmake-io/xmake/issues/898): 改进golang项目构建，支持交叉编译
+* [#275](https://github.com/xmake-io/xmake/issues/275): 支持go包管理器去集成第三方go依赖包
+* [#581](https://github.com/xmake-io/xmake/issues/581): 支持dub包管理器去集成第三方dlang依赖包
+
+### 改进
+
+* [#868](https://github.com/xmake-io/xmake/issues/868): 支持新的cl.exe的头文件依赖输出文件格式，`/sourceDependencies xxx.json`
+* [#902](https://github.com/xmake-io/xmake/issues/902): 改进交叉编译工具链
+
+## v2.3.5
+
+### 新特性
+
+* 添加`xmake show -l envs`去显示xmake内置的环境变量列表
+* [#861](https://github.com/xmake-io/xmake/issues/861): 支持从指定目录搜索本地包去直接安装远程依赖包
+* [#854](https://github.com/xmake-io/xmake/issues/854): 针对wget, curl和git支持全局代理设置
+
+### 改进
+
+* [#828](https://github.com/xmake-io/xmake/issues/828): 针对protobuf规则增加导入子目录proto文件支持
+* [#835](https://github.com/xmake-io/xmake/issues/835): 改进mode.minsizerel模式，针对msvc增加/GL支持，进一步优化目标程序大小
+* [#828](https://github.com/xmake-io/xmake/issues/828): protobuf规则支持import多级子目录
+* [#838](https://github.com/xmake-io/xmake/issues/838#issuecomment-643570920): 支持完全重写内置的构建规则，`add_files("src/*.c", {rules = {"xx", override = true}})`
+* [#847](https://github.com/xmake-io/xmake/issues/847): 支持rc文件的头文件依赖解析
+* 改进msvc工具链，去除全局环境变量的依赖
+* [#857](https://github.com/xmake-io/xmake/pull/857): 改进`set_toolchains()`支持交叉编译的时候，特定target可以切换到host工具链同时编译
+
+### Bugs修复
+
+* 修复进度字符显示
+* [#829](https://github.com/xmake-io/xmake/issues/829): 修复由于macOS大小写不敏感系统导致的sysroot无效路径问题
+* [#832](https://github.com/xmake-io/xmake/issues/832): 修复find_packages在debug模式下找不到的问题
+
+## v2.3.4
+
+### 新特性
+
 * [#630](https://github.com/xmake-io/xmake/issues/630): 支持*BSD系统，例如：FreeBSD, ..
 * 添加wprint接口去显示警告信息
 * [#784](https://github.com/xmake-io/xmake/issues/784): 添加`set_policy()`去设置修改一些内置的策略，比如：禁用自动flags检测和映射
+* [#780](https://github.com/xmake-io/xmake/issues/780): 针对target添加set_toolchains/set_toolsets实现更完善的工具链设置，并且实现platform和toolchains分离
+* [#798](https://github.com/xmake-io/xmake/issues/798): 添加`xmake show`插件去显示xmake内置的各种信息
+* [#797](https://github.com/xmake-io/xmake/issues/797): 添加ninja主题风格，显示ninja风格的构建进度条，`xmake g --theme=ninja`
+* [#816](https://github.com/xmake-io/xmake/issues/816): 添加mode.releasedbg和mode.minsizerel编译模式规则
+* [#819](https://github.com/xmake-io/xmake/issues/819): 支持ansi/vt100终端字符控制
 
 ### 改进
 
 * [#771](https://github.com/xmake-io/xmake/issues/771): 检测includedirs,linkdirs和frameworkdirs的输入有效性
 * [#774](https://github.com/xmake-io/xmake/issues/774): `xmake f --menu`可视化配置菜单支持窗口大小Resize调整
 * [#782](https://github.com/xmake-io/xmake/issues/782): 添加add_cxflags等配置flags自动检测失败提示
+* [#808](https://github.com/xmake-io/xmake/issues/808): 生成cmakelists插件增加对add_frameworks的支持
+* [#820](https://github.com/xmake-io/xmake/issues/820): 支持独立的工作目录和构建目录，保持项目目录完全干净
 
 ### Bugs修复
 
-* [#786](https://github.com/xmake-io/xmake/issues/786): Fix check header file deps
+* [#786](https://github.com/xmake-io/xmake/issues/786): 修复头文件依赖检测
+* [#810](https://github.com/xmake-io/xmake/issues/810): 修复linux下gcc strip debug符号问题
 
 ## v2.3.3
 
@@ -830,7 +1032,7 @@
 
 ### 改进
 
-* [#563](https://github.com/xmake-io/xmake/pull/563): 重构构建逻辑，将特定语言的构建抽离到独立的rules中去 
+* [#563](https://github.com/xmake-io/xmake/pull/563): 重构构建逻辑，将特定语言的构建抽离到独立的rules中去
 * [#570](https://github.com/xmake-io/xmake/issues/570): 改进Qt构建，将`qt.application`拆分成`qt.widgetapp`和`qt.quickapp`两个构建规则
 * [#576](https://github.com/xmake-io/xmake/issues/576): 使用`set_toolchain`替代`add_tools`和`set_tools`，解决老接口使用歧义，提供更加易理解的设置方式
 * 改进`xmake create`创建模板工程
@@ -842,7 +1044,7 @@
 
 ### Bugs修复
 
-* [#567](https://github.com/xmake-io/xmake/issues/567): 修复序列化对象时候出现的内存溢出问题 
+* [#567](https://github.com/xmake-io/xmake/issues/567): 修复序列化对象时候出现的内存溢出问题
 * [#566](https://github.com/xmake-io/xmake/issues/566): 修复安装远程依赖的链接顺序问题
 * [#565](https://github.com/xmake-io/xmake/issues/565): 修复vcpkg包的运行PATH设置问题
 * [#597](https://github.com/xmake-io/xmake/issues/597): 修复xmake require安装包时间过长问题
@@ -895,7 +1097,7 @@
 
 ### 新特性
 
-* [#380](https://github.com/xmake-io/xmake/pull/380): 添加导出compile_flags.txt 
+* [#380](https://github.com/xmake-io/xmake/pull/380): 添加导出compile_flags.txt
 * [#382](https://github.com/xmake-io/xmake/issues/382): 简化域设置语法
 * [#397](https://github.com/xmake-io/xmake/issues/397): 添加clib包集成支持
 * [#404](https://github.com/xmake-io/xmake/issues/404): 增加Qt/Android编译支持，并且支持android apk生成和部署
@@ -1016,7 +1218,7 @@
 * 修复`$ xmake f --menu`中Exit问题以及cpu过高问题
 * [#197](https://github.com/xmake-io/xmake/issues/197): 修复生成的vs201x工程文件带有中文路径乱码问题
 * 修复WDK规则编译生成的驱动在Win7下运行蓝屏问题
-* [#205](https://github.com/xmake-io/xmake/pull/205): 修复vcproj工程生成targetdir, objectdir路径设置不匹配问题 
+* [#205](https://github.com/xmake-io/xmake/pull/205): 修复vcproj工程生成targetdir, objectdir路径设置不匹配问题
 
 ## v2.2.1
 
@@ -1215,7 +1417,7 @@
 
 * 修改菜单选项颜色
 * [#71](https://github.com/xmake-io/xmake/issues/71): 针对widows编译器改进优化选项映射
-* [#73](https://github.com/xmake-io/xmake/issues/73): 尝试获取可执行文件路径来作为xmake的脚本目录 
+* [#73](https://github.com/xmake-io/xmake/issues/73): 尝试获取可执行文件路径来作为xmake的脚本目录
 * 在`add_subdirs`中的子`xmake.lua`中，使用独立子作用域，避免作用域污染导致的干扰问题
 * [#78](https://github.com/xmake-io/xmake/pull/78): 美化非全屏终端窗口下的`xmake --help`输出
 * 避免产生不必要的`.xmake`目录，如果不在工程中的时候
@@ -1280,7 +1482,7 @@
 * 添加app2ipa插件
 * 为`xmake.lua`工程描述增加dictionay语法风格
 * 提供智能扫描编译模式，在无任何`xmake.lua`等工程描述文件的情况下，也能直接快速编译
-* 为`xmake.lua`工程描述添加`set_xmakever`接口，更加友好的处理版本兼容性问题 
+* 为`xmake.lua`工程描述添加`set_xmakever`接口，更加友好的处理版本兼容性问题
 * 为`objc`和`swift`程序添加`add_frameworks`接口
 * 更加快速方便的多语言扩展支持，增加`golang`, `dlang`和`rust`程序构建的支持
 * 添加`target_end`, `option_end` 和`task_end`等可选api，用于显示结束描述域，进入根域设置，提高可读性

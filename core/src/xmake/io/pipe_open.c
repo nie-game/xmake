@@ -51,12 +51,12 @@ tb_int_t xm_io_pipe_open(lua_State* lua)
     tb_size_t mode = TB_FILE_MODE_RO;
     if (modestr[0] == 'w') mode = TB_FILE_MODE_WO;
 
-    // get buffer size 
+    // get buffer size
     tb_size_t buffsize = (tb_size_t)luaL_checknumber(lua, 3);
 
     // open pipe file
     tb_pipe_file_ref_t pipefile = tb_pipe_file_init(name, mode, buffsize);
-    if (pipefile) lua_pushlightuserdata(lua, (tb_pointer_t)pipefile);
+    if (pipefile) xm_lua_pushpointer(lua, (tb_pointer_t)pipefile);
     else lua_pushnil(lua);
     return 1;
 }

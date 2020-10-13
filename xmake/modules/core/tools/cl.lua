@@ -24,6 +24,7 @@ import("core.project.project")
 import("core.language.language")
 import("private.tools.vstool")
 import("private.tools.cl.parse_include")
+import("private.utils.progress")
 
 -- init it
 function init(self)
@@ -112,6 +113,19 @@ function nf_symbol(self, level, target)
     return flags
 end
 
+-- make the fp-model flag
+function nf_fpmodel(self, level)
+    local maps =
+    {
+        precise    = "-fp:precise" -- default
+    ,   fast       = "-fp:fast"
+    ,   strict     = "-fp:strict"
+    ,   except     = "-fp:except"
+    ,   noexcept   = "-fp:except-"
+    }
+    return maps[level]
+end
+
 -- make the warning flag
 function nf_warning(self, level)
 
@@ -139,7 +153,7 @@ function nf_optimize(self, level)
         none        = "-Od"
     ,   faster      = "-O2"
     ,   fastest     = "-Ox -fp:fast"
-    ,   smallest    = "-O1"
+    ,   smallest    = "-O1 -GL" -- /GL and (/OPT:REF is on by default in linker), we need enable /ltcg
     ,   aggressive  = "-Ox -fp:fast"
     }
 
@@ -174,10 +188,12 @@ function nf_language(self, stdname)
         _g.cmaps =
         {
             -- stdc
-            c99   = "-TP" -- compile as c++ files because msvc only support c89
+            c99   = "-TP" -- compile as c++ files because older msvc only support c89
         ,   gnu99 = "-TP"
-        ,   c11   = "-TP"
-        ,   gnu11 = "-TP"
+        ,   c11   = {"-std:c11", "-TP"}
+        ,   gnu11 = {"-std:c11", "-TP"}
+        ,   c17   = {"-std:c17", "-TP"}
+        ,   gnu17 = {"-std:c17", "-TP"}
         }
     end
 
@@ -193,10 +209,10 @@ function nf_language(self, stdname)
         ,   gnuxx17     = "-std:c++17"
         ,   cxx1z       = "-std:c++17"
         ,   gnuxx1z     = "-std:c++17"
-        ,   cxx20       = "-std:c++latest"
-        ,   gnuxx20     = "-std:c++latest"
-        ,   cxx2a       = "-std:c++latest"
-        ,   gnuxx2a     = "-std:c++latest"
+        ,   cxx20       = {"-std:c++20", "-std:c++latest"}
+        ,   gnuxx20     = {"-std:c++20", "-std:c++latest"}
+        ,   cxx2a       = {"-std:c++20", "-std:c++latest"}
+        ,   gnuxx2a     = {"-std:c++20", "-std:c++latest"}
         }
         local cxxmaps2 = {}
         for k, v in pairs(_g.cxxmaps) do
@@ -212,15 +228,14 @@ function nf_language(self, stdname)
     end
 
     -- map it
-    local flag = maps[stdname]
-
-    -- not support it?
-    if flag and flag:find("std:c++", 1, true) and not self:has_flags(flag, "cxflags") then
-        return
+    local flags = maps[stdname]
+    if flags then
+        for _, flag in ipairs(table.wrap(flags)) do
+            if self:has_flags(flag, "cxflags") then
+                return flag
+            end
+        end
     end
-
-    -- ok
-    return flag
 end
 
 -- make the define flag
@@ -235,7 +250,7 @@ end
 
 -- make the includedir flag
 function nf_includedir(self, dir)
-    -- @note we use os.args() to escape and wrap it, 
+    -- @note we use os.args() to escape and wrap it,
     -- because all flags will be preprocessed in `builder:_preprocess_flags`/`os.argv()`
     return "-I" .. os.args(path.translate(dir))
 end
@@ -282,8 +297,8 @@ function add_sourceflags(self, sourcefile, fileconfig, target, targetkind)
 
     -- add language type flags explicitly if the sourcekind is changed.
     --
-    -- because compiler maybe compile `.c` as c++. 
-    -- e.g. 
+    -- because compiler maybe compile `.c` as c++.
+    -- e.g.
     --   add_files("*.c", {sourcekind = "cxx"})
     --
     local sourcekind = fileconfig.sourcekind
@@ -315,8 +330,22 @@ function _compargv_pch(self, pcheaderfile, pcoutputfile, flags)
     return self:program(), table.join("-c", "-Yc", pchflags, "-Fp" .. pcoutputfile, "-Fo" .. pcoutputfile .. ".obj", pcheaderfile)
 end
 
+-- has /sourceDependencies xxx.json @see https://github.com/xmake-io/xmake/issues/868?
+function _has_source_dependencies(self)
+    local has_source_dependencies = _g._HAS_SOURCE_DEPENDENCIES
+    if has_source_dependencies == nil then
+        local source_dependencies_jsonfile = os.tmpfile() .. ".json"
+        if self:has_flags("/sourceDependencies " .. source_dependencies_jsonfile, "cl_sourceDependencies") and os.isfile(source_dependencies_jsonfile) then
+            has_source_dependencies = true
+        end
+        has_source_dependencies = has_source_dependencies or false
+        _g._HAS_SOURCE_DEPENDENCIES = has_source_dependencies
+    end
+    return has_source_dependencies
+end
+
 -- make the compile arguments list
-function compargv(self, sourcefile, objectfile, flags)
+function compargv(self, sourcefile, objectfile, flags, opt)
 
     -- precompiled header?
     local extension = path.extension(sourcefile)
@@ -326,11 +355,12 @@ function compargv(self, sourcefile, objectfile, flags)
 
     -- make the compile arguments list
     -- @note only flags in nf_xxx() need be wrapped via os.args, @see nf_includedir
-    return self:program(), table.join("-c", flags, "-Fo" .. objectfile, sourcefile)
+    local argv = table.join("-c", flags, "-Fo" .. objectfile, sourcefile)
+    return self:program(), (opt and opt.rawargs) and argv or winos.cmdargv(argv)
 end
 
 -- compile the source file
-function compile(self, sourcefile, objectfile, dependinfo, flags)
+function compile(self, sourcefile, objectfile, dependinfo, flags, opt)
 
     -- ensure the object directory
     -- @note this path here has been normalized, we can quickly find it by the unique path separator prompt
@@ -340,6 +370,7 @@ function compile(self, sourcefile, objectfile, dependinfo, flags)
     end
 
     -- compile it
+    local depfile = nil
     local outdata = try
     {
         function ()
@@ -347,11 +378,17 @@ function compile(self, sourcefile, objectfile, dependinfo, flags)
             -- generate includes file
             local compflags = flags
             if dependinfo then
-                compflags = table.join(flags, "-showIncludes")
+                if _has_source_dependencies(self) then
+                    depfile = os.tmpfile()
+                    compflags = table.join(flags, "/sourceDependencies", depfile)
+                else
+                    compflags = table.join(flags, "-showIncludes")
+                end
             end
 
             -- use vstool to compile and enable vs_unicode_output @see https://github.com/xmake-io/xmake/issues/528
-            return vstool.iorunv(compargv(self, sourcefile, objectfile, compflags))
+            local program, argv = compargv(self, sourcefile, objectfile, compflags, opt)
+            return vstool.iorunv(program, argv, {envs = self:runenvs()})
         end,
         catch
         {
@@ -369,12 +406,16 @@ function compile(self, sourcefile, objectfile, dependinfo, flags)
                     errors = errs
                 end
 
-                -- filter includes notes: "Note: including file: xxx.h", @note maybe not english language
                 local results = ""
-                for _, line in ipairs(tostring(errors):split("\n", {plain = true})) do
-                    line = line:rtrim()
-                    if not parse_include(line) then
-                        results = results .. line .. "\r\n"
+                if depfile then
+                    results = tostring(errors)
+                else
+                    -- filter includes notes: "Note: including file: xxx.h", @note maybe not english language
+                    for _, line in ipairs(tostring(errors):split("\n", {plain = true})) do
+                        line = line:rtrim()
+                        if not parse_include(line) then
+                            results = results .. line .. "\r\n"
+                        end
                     end
                 end
                 os.raise(results)
@@ -400,6 +441,9 @@ function compile(self, sourcefile, objectfile, dependinfo, flags)
                         end
                         if #lines > 0 then
                             local warnings = table.concat(table.slice(lines, 1, ifelse(#lines > 8, 8, #lines)), "\r\n")
+                            if progress.showing_without_scroll() then
+                                print("")
+                            end
                             cprint("${color.warning}%s", warnings)
                         end
                     end
@@ -409,8 +453,13 @@ function compile(self, sourcefile, objectfile, dependinfo, flags)
     }
 
     -- generate the dependent includes
-    if dependinfo and outdata then
-        dependinfo.depfiles_cl = outdata
+    if dependinfo then
+        if depfile and os.isfile(depfile) then
+            dependinfo.depfiles_cl_json = io.readfile(depfile)
+            os.rm(depfile)
+        elseif outdata then
+            dependinfo.depfiles_cl = outdata
+        end
     end
 end
 

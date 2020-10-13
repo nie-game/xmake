@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -24,6 +24,7 @@ import("core.base.option")
 import("core.project.config")
 import("core.project.depend")
 import("lib.detect.find_path")
+import("private.utils.progress")
 
 -- save Info.plist
 function _save_info_plist(target, info_plist_file)
@@ -58,7 +59,7 @@ function _save_info_plist(target, info_plist_file)
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
-</plist>]], name, name, name, name, get_config("target_minver") or (macos.version():major() .. "." .. macos.version():minor())))
+</plist>]], name, name, name, name, get_config("target_minver_macosx") or (macos.version():major() .. "." .. macos.version():minor())))
 end
 
 -- deploy application package for macosx
@@ -70,16 +71,11 @@ function main(target, opt)
     local dependfile = target:dependfile(target_app)
     local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
     if not depend.is_changed(dependinfo, {lastmtime = os.mtime(dependfile)}) then
-        return 
+        return
     end
 
     -- trace progress info
-    cprintf("${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} ", opt.progress)
-    if option.get("verbose") then
-        cprint("${dim color.build.target}generating.qt.app %s.app", target:basename())
-    else
-        cprint("${color.build.target}generating.qt.app %s.app", target:basename())
-    end
+    progress.show(opt.progress, "${color.build.target}generating.qt.app %s.app", target:basename())
 
     -- get qt sdk
     local qt = target:data("qt")
@@ -88,7 +84,7 @@ function main(target, opt)
     local macdeployqt = path.join(qt.bindir, "macdeployqt")
     assert(os.isexec(macdeployqt), "macdeployqt not found!")
 
-    -- generate target app 
+    -- generate target app
     local target_contents = path.join(target_app, "Contents")
     os.tryrm(target_app)
     os.cp(target:targetfile(), path.join(target_contents, "MacOS", target:basename()))

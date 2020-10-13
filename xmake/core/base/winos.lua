@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -24,7 +24,6 @@ local winos = winos or {}
 -- load modules
 local os     = require("base/os")
 local semver = require("base/semver")
-
 
 winos._ansi_cp  = winos._ansi_cp or winos.ansi_cp
 winos._oem_cp   = winos._oem_cp  or winos.oem_cp
@@ -57,11 +56,11 @@ function winos._version_from_name(name)
     ,   vista    = "6.0"
     ,   ws08     = "6.0"
     ,   longhorn = "6.0"
-    ,   win7     = "6.1" 
+    ,   win7     = "6.1"
     ,   win8     = "6.2"
-    ,   winblue  = "6.3"  
-    ,   win81    = "6.3" 
-    ,   win10    = "10.0" 
+    ,   winblue  = "6.3"
+    ,   win81    = "6.3"
+    ,   win10    = "10.0"
     }
     return winos._VERSIONS[name]
 end
@@ -148,9 +147,35 @@ function winos.version()
 
     -- save to cache
     winos._VERSION = winver or false
-
-    -- done
     return winver
+end
+
+-- get command arguments on windows to solve 8192 character command line length limit
+function winos.cmdargv(argv, key)
+
+    -- too long arguments?
+    local limit = 4096
+    local argn = 0
+    for _, arg in ipairs(argv) do
+        argn = argn + #arg
+        if argn > limit then
+            break
+        end
+    end
+    if argn > limit then
+        local argsfile = os.tmpfile(key or table.concat(argv, '')) .. ".args.txt"
+        local f = io.open(argsfile, 'w')
+        if f then
+            -- we need split args file to solve `fatal error LNK1170: line in command file contains 131071 or more characters`
+            -- @see https://github.com/xmake-io/xmake/issues/812
+            for _, arg in ipairs(argv) do
+                f:write(os.args(arg, {escape = true}) .. "\n")
+            end
+            f:close()
+        end
+        argv = {"@" .. argsfile}
+    end
+    return argv
 end
 
 -- return module: winos

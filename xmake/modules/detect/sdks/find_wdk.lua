@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -122,7 +122,7 @@ function _find_wdk(sdkdir, sdkver)
         return nil
     end
 
-    -- get the bin directory 
+    -- get the bin directory
     local bindir = path.join(sdkdir, "bin")
 
     -- get the lib directory
@@ -144,14 +144,14 @@ end
 -- find WDK toolchains
 --
 -- @param sdkdir    the WDK directory
--- @param opt       the argument options, e.g. {verbose = true, force = false, version = "5.9.1"} 
+-- @param opt       the argument options, e.g. {verbose = true, force = false, version = "5.9.1"}
 --
 -- @return          the WDK toolchains. e.g. {sdkver = ..., sdkdir = ..., bindir = .., libdir = ..., includedir = ..., .. }
 --
--- @code 
+-- @code
 --
 -- local toolchains = find_wdk("~/wdk")
--- 
+--
 -- @endcode
 --
 function main(sdkdir, opt)
@@ -165,7 +165,7 @@ function main(sdkdir, opt)
     if not opt.force and cacheinfo.wdk and cacheinfo.wdk.sdkdir and os.isdir(cacheinfo.wdk.sdkdir) then
         return cacheinfo.wdk
     end
-       
+
     -- find wdk
     local wdk = _find_wdk(sdkdir or config.get("wdk") or global.get("wdk") or config.get("sdk"), opt.version or config.get("wdk_sdkver"))
     if wdk then
@@ -176,14 +176,14 @@ function main(sdkdir, opt)
 
         -- trace
         if opt.verbose or option.get("verbose") then
-            cprint("checking for the WDK directory ... ${color.success}%s", wdk.sdkdir)
-            cprint("checking for the WDK version ... ${color.success}%s", wdk.sdkver)
+            cprint("checking for WDK directory ... ${color.success}%s", wdk.sdkdir)
+            cprint("checking for WDK version ... ${color.success}%s", wdk.sdkver)
         end
     else
 
         -- trace
         if opt.verbose or option.get("verbose") then
-            cprint("checking for the WDK directory ... ${color.nothing}${text.nothing}")
+            cprint("checking for WDK directory ... ${color.nothing}${text.nothing}")
         end
     end
 

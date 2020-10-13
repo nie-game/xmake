@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -31,6 +31,7 @@ rule("xcode.info_plist")
         import("core.base.option")
         import("core.theme.theme")
         import("core.project.depend")
+        import("private.utils.progress")
 
         -- check
         assert(path.filename(sourcefile) == "Info.plist", "we only support Info.plist file!")
@@ -43,20 +44,15 @@ rule("xcode.info_plist")
         local dependfile = target:dependfile(sourcefile)
         local dependinfo = option.get("rebuild") and {} or (depend.load(dependfile) or {})
         if not depend.is_changed(dependinfo, {lastmtime = os.mtime(dependfile)}) then
-            return 
+            return
         end
-        
+
         -- trace progress info
-        cprintf("${color.build.progress}" .. theme.get("text.build.progress_format") .. ":${clear} ", opt.progress)
-        if option.get("verbose") then
-            cprint("${dim color.build.object}processing.xcode.$(mode) %s", sourcefile)
-        else
-            cprint("${color.build.object}processing.xcode.$(mode) %s", sourcefile)
-        end
+        progress.show(opt.progress, "${color.build.object}processing.xcode.$(mode) %s", sourcefile)
 
         -- process and generate Info.plist
         local info_plist_file = path.join(target:rule("xcode.framework") and resourcesdir or contentsdir, path.filename(sourcefile))
-        local maps = 
+        local maps =
         {
             DEVELOPMENT_LANGUAGE = "en",
             EXECUTABLE_NAME = target:basename(),
@@ -64,7 +60,7 @@ rule("xcode.info_plist")
             PRODUCT_NAME = target:name(),
             PRODUCT_DISPLAY_NAME = target:name(),
             CURRENT_PROJECT_VERSION = target:version() and tostring(target:version()) or "1.0",
-            MACOSX_DEPLOYMENT_TARGET = get_config("target_minver")
+            MACOSX_DEPLOYMENT_TARGET = get_config("target_minver_macosx")
         }
         if target:rule("xcode.bundle") then
             maps.PRODUCT_BUNDLE_PACKAGE_TYPE = "BNDL"

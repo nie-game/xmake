@@ -11,7 +11,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- 
+--
 -- Copyright (C) 2015-2020, TBOOX Open Source Group.
 --
 -- @author      ruki
@@ -32,7 +32,7 @@ local vformat   = require("sandbox/modules/vformat")
 -- find directory
 --
 -- @param name      the directory name
--- @param pathes    the search pathes (e.g. dirs, pathes, winreg pathes)
+-- @param paths     the search paths (e.g. dirs, paths, winreg paths)
 -- @param opt       the options, e.g. {suffixes = {"/aa", "/bb"}}
 --
 -- @return          the directory path
@@ -46,35 +46,35 @@ local vformat   = require("sandbox/modules/vformat")
 --
 -- @endcode
 --
-function sandbox_lib_detect_find_directory.main(name, pathes, opt)
+function sandbox_lib_detect_find_directory.main(name, paths, opt)
 
     -- init options
     opt = opt or {}
 
-    -- init pathes
-    pathes = table.wrap(pathes)
-    
-    -- append suffixes to pathes
+    -- init paths
+    paths = table.wrap(paths)
+
+    -- append suffixes to paths
     local suffixes = table.wrap(opt.suffixes)
     if #suffixes > 0 then
-        local pathes_new = {}
-        for _, parent in ipairs(pathes) do
+        local paths_new = {}
+        for _, parent in ipairs(paths) do
             for _, suffix in ipairs(suffixes) do
-                table.insert(pathes_new, path.join(parent, suffix))
+                table.insert(paths_new, path.join(parent, suffix))
             end
         end
-        pathes = pathes_new
+        paths = paths_new
     end
 
     -- find file
-    for _, _path in ipairs(pathes) do
+    for _, _path in ipairs(paths) do
 
         -- format path for builtin variables
         if type(_path) == "function" then
-            local ok, results = sandbox.load(_path) 
+            local ok, results = sandbox.load(_path)
             if ok then
                 _path = results or ""
-            else 
+            else
                 raise(results)
             end
         else
