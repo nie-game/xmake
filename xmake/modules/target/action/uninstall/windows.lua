@@ -61,7 +61,7 @@ function uninstall_binary(target, opt)
     -- remove the dependent shared/windows (*.dll) target
     -- @see https://github.com/xmake-io/xmake/issues/961
     for _, dep in ipairs(target:orderdeps()) do
-        if dep:targetkind() == "shared" and is_plat("windows", "mingw") then
+        if dep:targetkind() == "shared" and is_plat("windowsclangcross", "windows", "mingw") then
             os.vrm(path.join(binarydir, path.filename(dep:targetfile())))
         end
     end

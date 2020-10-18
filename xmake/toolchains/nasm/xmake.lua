@@ -34,7 +34,7 @@ toolchain("nasm")
             toolchain:add("nasm.asflags", "-f", toolchain:is_arch("x86_64") and "macho64" or "macho32")
         elseif toolchain:is_plat("linux", "bsd") then
             toolchain:add("nasm.asflags", "-f", toolchain:is_arch("x86_64") and "elf64" or "elf32")
-        elseif toolchain:is_plat("windows", "mingw", "msys", "cygwin") then
+        elseif toolchain:is_plat("windowsclangcross", "windows", "mingw", "msys", "cygwin") then
             toolchain:add("nasm.asflags", "-f", toolchain:is_arch("x64") and "win64" or "win32")
         end
     end)

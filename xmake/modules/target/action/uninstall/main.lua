@@ -40,7 +40,7 @@ function main(target, opt)
 
     -- call script
     if not target:isphony() then
-        local install_style = target:is_plat("windows", "mingw") and "windows" or "unix"
+        local install_style = target:is_plat("windowsclangcross", "windows", "mingw") and "windows" or "unix"
         local script = import(install_style, {anonymous = true})["uninstall_" .. target:targetkind()]
         if script then
             script(target, opt)

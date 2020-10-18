@@ -28,7 +28,7 @@ function init(self)
     _super.init(self)
 
     -- add cuflags
-    if not is_plat("windows", "mingw") then
+    if not is_plat("windowsclangcross", "windows", "mingw") then
         self:add("shared.cuflags", "-fPIC")
     end
 

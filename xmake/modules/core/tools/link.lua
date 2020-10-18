@@ -65,7 +65,7 @@ function nf_strip(self, level)
     local maps =
     {
         debug = "/opt:ref /opt:icf"
-    ,   all   = "/opt:ref /opt:icf /ltcg" -- we enable /ltcg for optimize/smallest:/Gl
+    ,   all   = "/opt:ref /opt:icf" -- we enable /ltcg for optimize/smallest:/Gl
     }
     return maps[level]
 end
