@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## v2.3.8
+
 ### New features
 
 * [#955](https://github.com/xmake-io/xmake/issues/955): Add zig project templates
@@ -19,10 +21,12 @@
 * Improve `add_requires("zlib~xxx")` to support for installing multi-packages at same time
 * [#977](https://github.com/xmake-io/xmake/issues/977): Improve find_mingw for windows
 * [#978](https://github.com/xmake-io/xmake/issues/978): Improve toolchain flags order
+* Improve Xcode toolchain to support for macOS/arm64
 
 ### Bugs fixed
 
 * [#951](https://github.com/xmake-io/xmake/issues/951): Fix emcc support for windows
+* [#992](https://github.com/xmake-io/xmake/issues/992): Fix filelock bug
 
 ## v2.3.7
 
@@ -838,6 +842,8 @@
 
 ## master (开发中)
 
+## v2.3.8
+
 ### 新特性
 
 * [#955](https://github.com/xmake-io/xmake/issues/955): 添加 Zig 空工程模板
@@ -855,10 +861,12 @@
 * 增加 `add_requires("zlib~xxx")` 模式使得能够支持同时安装带有多种配置的同一个包，作为独立包存在
 * [#977](https://github.com/xmake-io/xmake/issues/977): 改进 find_mingw 在 windows 上的探测
 * [#978](https://github.com/xmake-io/xmake/issues/978): 改进工具链的flags顺序
+* 改进XCode工具链，支持macOS/arm64
 
 ### Bugs修复
 
 * [#951](https://github.com/xmake-io/xmake/issues/951): 修复 emcc (WebAssembly) 工具链在windows上的支持
+* [#992](https://github.com/xmake-io/xmake/issues/992): 修复文件锁偶尔打开失败问题
 
 ## v2.3.7
 
