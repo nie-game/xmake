@@ -110,9 +110,9 @@ function linkargv(self, objectfiles, targetkind, targetfile, flags, opt)
     end
     -- @note we cannot put -lib/-dll to @args.txt
     if targetkind == "static" then
-        table.insert(argv, 1, "-lib")
+        table.insert(argv, 1, "/lib")
     elseif targetkind == "shared" then
-        table.insert(argv, 1, "-dll")
+        table.insert(argv, 1, "/dll")
     end
     return self:program(), argv
 end
